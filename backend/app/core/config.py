@@ -1,5 +1,9 @@
+import os
+import warnings
 from pydantic import BaseModel
 from typing import List
+
+DEFAULT_DEV_SECRET = "DEV_ONLY_INSECURE_SECRET_KEY_CHANGE_IN_PRODUCTION_2026"
 
 class Settings(BaseModel):
     PROJECT_NAME: str = "AI-Based Fake Identity & Document Screening System"
@@ -10,9 +14,10 @@ class Settings(BaseModel):
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
+        "http://localhost:4173",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        "*"
+        "http://127.0.0.1:4173",
     ]
     
     # Forensic Thresholds
@@ -41,9 +46,24 @@ class Settings(BaseModel):
     REVIEW_SCORE_MIN: float = 60.0
     
     # Database
-    DATABASE_URL: str = "sqlite:///./screening_system.db"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./screening_system.db")
     
-    # Secret Key for cryptographic hashing
-    SECRET_SALT: str = "AGY_SECURE_BORDER_SCREENING_2026_KEY"
+    # Secret Key for cryptographic hashing & JWT
+    SECRET_SALT: str = os.getenv("SECRET_SALT", "AGY_SECURE_BORDER_SCREENING_2026_KEY")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", DEFAULT_DEV_SECRET)
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
+
+    # Ollama Local LLM Configuration
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+    OLLAMA_TIMEOUT: float = float(os.getenv("OLLAMA_TIMEOUT", "15.0"))
 
 settings = Settings()
+
+if settings.SECRET_KEY == DEFAULT_DEV_SECRET:
+    warnings.warn(
+        "SECURITY WARNING: Using default dev-only SECRET_KEY. Set SECRET_KEY in .env for production environments.",
+        UserWarning,
+        stacklevel=2
+    )

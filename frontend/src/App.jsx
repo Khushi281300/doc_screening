@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/layout/Navbar';
 import Sidebar, { MobileBottomNav } from './components/layout/Sidebar';
+import Footer from './components/layout/Footer';
 import DocumentScanner from './components/capture/DocumentScanner';
 import ForensicViewerPane from './components/forensics/ForensicViewerPane';
 import MRZCard from './components/mrz/MRZCard';
 import BiometricComparisonCard from './components/biometrics/BiometricComparisonCard';
 import RiskScoreCard from './components/risk/RiskScoreCard';
+import RiskScoreView from './components/risk/RiskScoreView';
 import ExplainabilityChecklist from './components/risk/ExplainabilityChecklist';
 import WatchlistExplorer from './components/database/WatchlistExplorer';
 import CheckpointAnalytics from './components/analytics/CheckpointAnalytics';
@@ -14,6 +16,15 @@ import AuditAndBlockchainLedger from './components/audit/AuditAndBlockchainLedge
 import { PRESET_SCENARIOS } from './data/presetSamples';
 import { runFullInspection, checkHealth, getWatchlist, addToWatchlist, removeFromWatchlist } from './api/client';
 import { generateTD3MRZ } from './utils/mrzGenerator';
+
+import AgentReasoningTerminal from './components/agent/AgentReasoningTerminal';
+import ForensicDossierCard from './components/dossier/ForensicDossierCard';
+import HITLReviewPanel from './components/hitl/HITLReviewPanel';
+import OfficerCopilotModal from './components/hitl/OfficerCopilotModal';
+import { playPop, playSuccessFanfare } from './utils/soundEffects';
+import { ShieldAlert, Bot } from 'lucide-react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
 
 const INITIAL_WATCHLIST = [
   {
@@ -42,7 +53,8 @@ const INITIAL_WATCHLIST = [
   }
 ];
 
-export default function App() {
+function MainDashboard() {
+  const { officer, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('scanner');
   const [loading, setLoading] = useState(false);
   const [documentImage, setDocumentImage] = useState(null);
@@ -51,6 +63,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [engineMode, setEngineMode] = useState('LIVE_BACKEND');
   const [watchlist, setWatchlist] = useState(INITIAL_WATCHLIST);
+  const [copilotOpen, setCopilotOpen] = useState(false);
 
   const [customMetadata, setCustomMetadata] = useState({
     fullName: 'UZUMAKI NARUTO',
@@ -182,11 +195,12 @@ export default function App() {
         document_image_base64: documentImage,
         live_face_base64: liveFaceImage,
         mrz_lines: mrzLinesToSend,
-        officer_id: 'OFFICER-742',
-        checkpoint_id: 'KONOHA-INTL-T1-E7'
+        officer_id: officer?.badge_id || 'BC-1001',
+        checkpoint_id: officer?.checkpoint_id || 'DEL-T3-GATE-4'
       });
       setResult(res);
       setEngineMode('LIVE_BACKEND');
+      playSuccessFanfare();
     } catch (err) {
       console.warn('Live backend inspection failed or unreachable, using scenario data:', err);
       setEngineMode('DEMO_SCENARIO');
@@ -215,14 +229,14 @@ export default function App() {
       } else if (id === 'fake_mrz_checksum') {
         setResult({
           status: 'SUCCESS',
-          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 28, confidence_score: 99, recommendation: 'Document rejected. Security checksums at bottom mathematically fail ICAO standards.', critical_failures: ['Security checksum does not match — document data has been altered.'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 0, status: 'FAIL' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 94, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
+          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 28, confidence_score: 99, recommendation: 'Document rejected. Security checksums at bottom mathematically fail ICAO standards.', critical_failures: ['Security checksum does not match â€” document data has been altered.'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 0, status: 'FAIL' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 94, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
           document_fields: { format: 'TD3', full_name: 'DAVIS JONATHAN', document_number: 'P99441100', all_check_digits_valid: false, check_digits: { document_number: { expected: '9', calculated: '0', valid: false }, composite: { expected: '99', calculated: '10', valid: false } }, raw_mrz: currentScenario.mrzLines },
           layers: { ela_heatmap_base64: documentImage }
         });
       } else if (id === 'screen_recapture_moire') {
         setResult({
           status: 'SUCCESS',
-          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 38, confidence_score: 96, recommendation: 'Document rejected. Screen recapture detected — photo of a digital monitor.', critical_failures: ['Screen recapture detected — high-frequency pixel grid found (Moire raster).'], warning_flags: [], factor_breakdown: { document_quality: { score: 75, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 40, status: 'FAIL' }, biometric_verification: { score: 90, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
+          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 38, confidence_score: 96, recommendation: 'Document rejected. Screen recapture detected â€” photo of a digital monitor.', critical_failures: ['Screen recapture detected â€” high-frequency pixel grid found (Moire raster).'], warning_flags: [], factor_breakdown: { document_quality: { score: 75, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 40, status: 'FAIL' }, biometric_verification: { score: 90, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
           document_fields: { format: 'TD3', full_name: 'MILLER SARAH', document_number: 'L55221199', all_check_digits_valid: true, raw_mrz: currentScenario.mrzLines },
           forensics_metrics: { recapture: { is_screen_recaptured: true } },
           layers: { fft_moire_base64: documentImage, ela_heatmap_base64: documentImage }
@@ -230,7 +244,7 @@ export default function App() {
       } else if (id === 'biometric_impersonator') {
         setResult({
           status: 'SUCCESS',
-          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 35, confidence_score: 98.4, recommendation: 'Document rejected. The person at the checkpoint does not match the passport portrait.', critical_failures: ['Face does not match the passport photo (similarity: 41% — minimum required: 65%).'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 41, status: 'FAIL' }, database_watchlist: { score: 100, status: 'PASS' } } },
+          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 35, confidence_score: 98.4, recommendation: 'Document rejected. The person at the checkpoint does not match the passport portrait.', critical_failures: ['Face does not match the passport photo (similarity: 41% â€” minimum required: 65%).'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 41, status: 'FAIL' }, database_watchlist: { score: 100, status: 'PASS' } } },
           document_fields: { format: 'TD3', full_name: 'ZHAO WEI', document_number: 'E44332211', all_check_digits_valid: true, raw_mrz: currentScenario.mrzLines },
           biometrics: { verdict: 'MISMATCH', similarity_percentage: 41.2, cosine_similarity: 0.412, liveness_score: 94, is_live: true, spoof_classification: 'REAL_HUMAN' },
           layers: { ela_heatmap_base64: documentImage }
@@ -310,13 +324,13 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#FFF8FA' }}>
-      <Navbar engineMode={engineMode} />
+    <div className="dashboard-root">
+      <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
 
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
+      <div className="dashboard-main-area">
+        <Navbar engineMode={engineMode} activeTab={activeTab} />
 
-        <main className="main-content-area" style={{ flex: 1, overflowY: 'auto', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
+        <main className="dashboard-body">
 
           {activeTab === 'scanner' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -336,46 +350,311 @@ export default function App() {
               />
 
               {result && (
-                <>
-                  <RiskScoreCard riskEvaluation={result.risk_evaluation} onViewAudit={() => setActiveTab('audit')} />
-                  <div className="grid-responsive-2col">
-                    <ForensicViewerPane inspectionResult={result} originalImage={documentImage} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                      <MRZCard documentFields={result.document_fields} />
-                      <BiometricComparisonCard
-                        docFaceCrop={result.layers?.doc_face_crop_base64 || result.layers?.original_rectified_base64}
-                        liveFaceImage={liveFaceImage}
-                        biometricResult={result.biometrics}
-                        onLiveFaceCaptured={b64 => setLiveFaceImage(b64)}
+                <div className="slide-up" style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 4 }}>
+                  {/* Step 2: Inspection Findings & Verdict */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span className="pill pill-teal">
+                        Step 2
+                      </span>
+                      <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
+                        Inspection Findings &amp; Authenticity Summary
+                      </h2>
+                    </div>
+                    <RiskScoreCard
+                      riskEvaluation={result.risk_evaluation}
+                      onViewAudit={() => setActiveTab('audit')}
+                    />
+                  </div>
+
+                  {/* Step 3: Visual & Document Evidence */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                      <span className="pill pill-teal">
+                        Step 3
+                      </span>
+                      <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
+                        Visual &amp; Biometric Evidence
+                      </h2>
+                      <span style={{ fontSize: '11.5px', color: '#64748B' }}>
+                        (Photo tampering check, security codes, and face matching)
+                      </span>
+                    </div>
+
+                    <div className="grid-responsive-2col" style={{ gap: 16 }}>
+                      <ForensicViewerPane
+                        inspectionResult={result}
+                        originalImage={documentImage}
+                        onGoToScanner={() => setActiveTab('scanner')}
+                        onSelectSample={handleSelectScenarioPreset}
                       />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        <MRZCard
+                          documentFields={result.document_fields}
+                          onGoToScanner={() => setActiveTab('scanner')}
+                          onSelectSample={handleSelectSample => handleSelectScenarioPreset(handleSelectSample)}
+                        />
+                        <BiometricComparisonCard
+                          docFaceCrop={result.layers?.doc_face_crop_base64 || result.layers?.original_rectified_base64}
+                          liveFaceImage={liveFaceImage}
+                          biometricResult={result.biometrics}
+                          onLiveFaceCaptured={b64 => setLiveFaceImage(b64)}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <ExplainabilityChecklist factorBreakdown={result.risk_evaluation?.factor_breakdown} />
-                </>
+
+                  {/* Step 4: Final Officer Review & Decision */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span className="pill pill-teal">
+                        Step 4
+                      </span>
+                      <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
+                        Manual Officer Review &amp; Decision
+                      </h2>
+                    </div>
+
+                    <HITLReviewPanel
+                      scanResult={result}
+                      onOverrideSuccess={(overrideRes) => {
+                        setResult(prev => ({
+                          ...prev,
+                          risk_evaluation: {
+                            ...prev.risk_evaluation,
+                            outcome: overrideRes.final_outcome
+                          }
+                        }));
+                      }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           )}
 
-          {activeTab === 'forensics'   && <ForensicViewerPane inspectionResult={result} originalImage={documentImage} />}
-          {activeTab === 'mrz'         && <MRZCard documentFields={result?.document_fields} />}
-          {activeTab === 'biometrics'  && <BiometricComparisonCard docFaceCrop={result?.layers?.doc_face_crop_base64} liveFaceImage={liveFaceImage} biometricResult={result?.biometrics} onLiveFaceCaptured={b64 => setLiveFaceImage(b64)} />}
-          {activeTab === 'watchlist'   && (
-            <WatchlistExplorer
-              currentScan={result}
-              customMetadata={customMetadata}
-              watchlist={watchlist}
-              onAddToWatchlist={handleAddToWatchlist}
-              onRemoveFromWatchlist={handleRemoveFromWatchlist}
-              onSelectScenarioPreset={handleSelectScenarioPreset}
-              onFlagCurrentDocument={handleFlagCurrentDocument}
+          {activeTab === 'forensics' && (
+            <ForensicViewerPane
+              inspectionResult={result}
+              originalImage={documentImage}
+              onGoToScanner={() => setActiveTab('scanner')}
+              onSelectSample={handleSelectScenarioPreset}
             />
           )}
-          {activeTab === 'analytics'   && <CheckpointAnalytics />}
-          {activeTab === 'audit'       && <AuditAndBlockchainLedger latestScan={result} />}
+
+          {activeTab === 'mrz' && (
+            <MRZCard
+              documentFields={result?.document_fields}
+              onGoToScanner={() => setActiveTab('scanner')}
+              onSelectSample={handleSelectScenarioPreset}
+            />
+          )}
+
+          {activeTab === 'risk' && (
+            <RiskScoreView
+              scanResult={result}
+              onGoToScanner={() => setActiveTab('scanner')}
+              onSelectSample={handleSelectScenarioPreset}
+              onGoToAudit={() => setActiveTab('audit')}
+            />
+          )}
+
+          {activeTab === 'biometrics' && (
+            <BiometricComparisonCard
+              docFaceCrop={result?.layers?.doc_face_crop_base64}
+              liveFaceImage={liveFaceImage}
+              biometricResult={result?.biometrics}
+              onLiveFaceCaptured={b64 => setLiveFaceImage(b64)}
+            />
+          )}
+
+          {activeTab === 'watchlist' && (
+            <AdminRoute onRedirect={setActiveTab}>
+              <WatchlistExplorer
+                currentScan={result}
+                customMetadata={customMetadata}
+                watchlist={watchlist}
+                onAddToWatchlist={handleAddToWatchlist}
+                onRemoveFromWatchlist={handleRemoveFromWatchlist}
+                onSelectScenarioPreset={handleSelectScenarioPreset}
+                onFlagCurrentDocument={handleFlagCurrentDocument}
+              />
+            </AdminRoute>
+          )}
+
+          {activeTab === 'analytics' && (
+            <AdminRoute onRedirect={setActiveTab}>
+              <CheckpointAnalytics />
+            </AdminRoute>
+          )}
+
+          {activeTab === 'audit' && (
+            <AuditAndBlockchainLedger latestScan={result} />
+          )}
+
         </main>
+
+        <Footer engineMode={engineMode} />
       </div>
+
+      {/* AI Assistant Launcher Button */}
+      <button
+        onClick={() => {
+          playPop();
+          setCopilotOpen(true);
+        }}
+        title="Open Border Officer AI Assistant"
+        style={{
+          position: 'fixed',
+          bottom: '50px',
+          right: '24px',
+          background: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
+          color: '#FFFFFF',
+          border: '1px solid #14B8A6',
+          borderRadius: '8px',
+          padding: '9px 16px',
+          fontSize: '12px',
+          fontWeight: '700',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 4px 16px rgba(13,148,136,0.3)',
+          cursor: 'pointer',
+          zIndex: 900,
+          transition: 'all 0.15s ease'
+        }}
+      >
+        <Bot size={15} />
+        <span>Officer AI Assistant</span>
+        <span style={{
+          background: 'rgba(255,255,255,0.2)',
+          color: '#FFFFFF',
+          fontSize: '9.5px',
+          padding: '1px 6px',
+          borderRadius: '4px',
+          fontWeight: '700'
+        }}>
+          Online
+        </span>
+      </button>
+
+      <OfficerCopilotModal
+        isOpen={copilotOpen}
+        onClose={() => setCopilotOpen(false)}
+        scanResult={result}
+      />
 
       <MobileBottomNav activeTab={activeTab} onSelectTab={setActiveTab} />
     </div>
   );
 }
+
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #F0FDFA 0%, #FDE8EE 40%, #F0FDFA 100%)',
+          color: '#0F172A',
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
+        }}
+      >
+        <div style={{ fontSize: '44px', marginBottom: '14px', animation: 'bubbleFloat 2s ease-in-out infinite' }}>ðŸ¾</div>
+        <div style={{ fontSize: '15px', fontWeight: 700, color: '#0D9488' }}>
+          Checking your details...
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  return children;
+}
+
+function AdminRoute({ children, onRedirect }) {
+  const { isAdmin, officer } = useAuth();
+
+  if (!isAdmin) {
+    return (
+      <div
+        style={{
+          margin: '40px auto',
+          maxWidth: '560px',
+          background: '#FFFFFF',
+          border: '1.5px solid #FCD34D',
+          borderRadius: '20px',
+          padding: '36px 28px',
+          textAlign: 'center',
+          boxShadow: '0 8px 30px rgba(245, 158, 11, 0.1)'
+        }}
+      >
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: '#FEF3C7',
+            color: '#B45309',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px'
+          }}
+        >
+          <ShieldAlert size={30} />
+        </div>
+        <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>
+          Manager Access Only
+        </h2>
+        <p style={{ fontSize: '13.5px', color: '#64748B', lineHeight: 1.6, marginBottom: '22px' }}>
+          Hi <strong>{officer?.name}</strong>! Your account is set up as a <strong>Passport Inspector</strong>.
+          Only Managers and Supervisors can view the watchlist and reports.
+          Please ask your supervisor if you need access.
+        </p>
+        <button
+          id="admin_guard_return_btn"
+          onClick={() => onRedirect('scanner')}
+          style={{
+            padding: '10px 20px',
+            background: 'linear-gradient(135deg, #0D9488, #0F766E)',
+            border: 'none',
+            borderRadius: '10px',
+            color: '#FFFFFF',
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(13,148,136,0.3)'
+          }}
+        >
+          Back to Passport Scanner
+        </button>
+      </div>
+    );
+  }
+
+  return children;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <ProtectedRoute>
+        <MainDashboard />
+      </ProtectedRoute>
+    </AuthProvider>
+  );
+}
+
+
+

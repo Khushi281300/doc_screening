@@ -20,16 +20,63 @@ export const setBackendUrl = (url) => {
 
 const apiClient = axios.create({
   baseURL: getBackendUrl(),
-  timeout: 5000,
+  timeout: 90000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// Request interceptor: attach dynamic backend URL and offline Bearer JWT token
 apiClient.interceptors.request.use((config) => {
   config.baseURL = getBackendUrl();
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('AEGIS_AUTH_TOKEN');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
+
+// Response interceptor: handle 401 unauthorized / expired tokens gracefully
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('AEGIS_AUTH_TOKEN');
+        localStorage.removeItem('AEGIS_OFFICER');
+        window.dispatchEvent(new CustomEvent('aegis-auth-expired', {
+          detail: { message: error.response.data?.detail || 'Session expired. Please log in again.' }
+        }));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Offline Officer Authentication Endpoints
+export const loginOfficer = async (credentials) => {
+  const response = await apiClient.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const getOfficerProfile = async () => {
+  const response = await apiClient.get('/auth/me');
+  return response.data;
+};
+
+export const logoutOfficer = async () => {
+  try {
+    const response = await apiClient.post('/auth/logout');
+    return response.data;
+  } catch (e) {
+    // Offline / stateless JWT: safe fallback
+    return { status: 'SUCCESS', message: 'Logged out' };
+  }
+};
 
 export const checkHealth = async () => {
   const response = await apiClient.get('/health');
@@ -101,4 +148,25 @@ export const generateCertificate = async (payload) => {
   return response.data;
 };
 
+export const askCopilot = async (payload) => {
+  const response = await apiClient.post('/scan/copilot-chat', payload);
+  return response.data;
+};
+
+export const getLlmStatus = async () => {
+  const response = await apiClient.get('/scan/llm-status');
+  return response.data;
+};
+
+export const submitHITLOverride = async (payload) => {
+  const response = await apiClient.post('/scan/hitl-override', payload);
+  return response.data;
+};
+
+export const getReviewQueue = async () => {
+  const response = await apiClient.get('/scan/review-queue');
+  return response.data;
+};
+
 export default apiClient;
+

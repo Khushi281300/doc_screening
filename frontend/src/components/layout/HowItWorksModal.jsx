@@ -19,56 +19,56 @@ import {
 const PIPELINE_STEPS = [
   {
     step: "01",
-    title: "Document Ingestion & Edge Quality Gate",
-    badge: "Optical Telemetry",
+    title: "Step 1 — Scan & Straighten the Document",
+    badge: "Photo Quality Check",
     icon: Scan,
     color: "cyan",
-    summary: "Captures passport scan, applies 4-point homography rectification, and measures edge sharpness (Laplacian variance) & specular glare to ensure ICAO optical legibility.",
+    summary: "The system captures the passport scan, straightens any tilt or angle, and checks that the photo is sharp, clear, and free of glare — just like a scanner at a bank or airport.",
     tech: "Laplacian Variance > 80 | Tenengrad Focus Energy | Specular Glare < 8%"
   },
   {
     step: "02",
-    title: "ICAO Doc 9303 MRZ Cryptographic Checksums",
-    badge: "Checksum Engine",
+    title: "Step 2 — Read the Bottom Security Numbers (MRZ)",
+    badge: "Security Code Check",
     icon: Binary,
     color: "sky",
-    summary: "Parses Machine Readable Zone (MRZ TD3/TD1), extracts holder details, and mathematically verifies 7-3-1 weight sum modulo 10 check digits for Doc#, DOB, Expiry, and Composite.",
+    summary: "Reads the two lines of numbers and letters printed at the bottom of the passport (called MRZ — Machine Readable Zone) and runs a mathematical check to verify no date or number was tampered with.",
     tech: "7-3-1 Weight Sum Modulo 10 | ICAO TD3 Format | Strict Field Reconciliation"
   },
   {
     step: "03",
-    title: "Multi-Spectral Forensic Tamper Heatmaps",
-    badge: "Spectral Forensics",
+    title: "Step 3 — Check for Photo Edits & Forgery",
+    badge: "Forgery Detection",
     icon: Layers,
     color: "purple",
-    summary: "Simultaneously evaluates 6 physical and digital tamper layers: Error Level Analysis (ELA recompression), Spatial Rich Model (SRM noise), 2D FFT Moiré screen detection, Copy-Move keypoint matching, and JPEG Ghost analysis.",
+    summary: "Runs 6 separate digital checks to detect any photo editing, Photoshop changes, copied stamps, screen recaptures (photo of a screen), or glued-on portraits that a human eye might miss.",
     tech: "ELA Compression Residuals | SRM 30-Filter Bank | 2D FFT Frequency Peaks | ORB Match"
   },
   {
     step: "04",
-    title: "ArcFace Facial Biometrics & Anti-Spoofing",
-    badge: "Biometrics & PAD",
+    title: "Step 4 — Face Match & Liveness Check",
+    badge: "Face Verification",
     icon: UserCheck,
     color: "emerald",
-    summary: "Compares document portrait crop against live checkpoint selfie using 512-D deep embeddings (ArcFace cosine similarity) with ISO/IEC 30107-3 compliant passive texture and active challenge liveness.",
+    summary: "Compares the passport photo to the live camera selfie to confirm it is the same person. Also checks the selfie is a real live person — not a printout, mask, or screen replay.",
     tech: "512-D Cosine Metric > 0.65 Match | High-Freq Texture PAD | 3-Step Active Challenge"
   },
   {
     step: "05",
-    title: "Interpol & Watchlist Intelligence Cross-Check",
-    badge: "Watchlist Registry",
+    title: "Step 5 — Check Police & Interpol Alert Lists",
+    badge: "Watchlist Check",
     icon: ShieldAlert,
     color: "rose",
-    summary: "Performs real-time sub-millisecond querying against active Interpol Red Notices, stolen/lost passport databases (SLTD), and travel ban registries.",
+    summary: "Instantly searches the document number and traveler name against lost/stolen passport lists, Interpol Red Notices, and travel bans to flag any known alerts.",
     tech: "O(1) Indexed In-Memory Cache | Fuzzy Name Levenshtein Matching | Severity Hard-Stops"
   },
   {
     step: "06",
-    title: "Explainable Risk Engine & SHA-256 Merkle Ledger",
-    badge: "Audit & Ledger",
+    title: "Step 6 — Final Decision & Secure Audit Log",
+    badge: "Decision & Log",
     icon: Lock,
     color: "amber",
-    summary: "Fuses all multi-modal signals into a deterministic 0-100 risk score with plain-English officer explanations, sealing the inspection result in an immutable SHA-256 Merkle blockchain block.",
+    summary: "Combines all findings into a clear Pass / Fail verdict with plain officer instructions. Every inspection decision is permanently saved with a tamper-proof security seal for audit purposes.",
     tech: "Multi-Factor Weighted Scoring | Hard-Stop Rules | Cryptographic Merkle Anchoring"
   }
 ];
@@ -87,10 +87,10 @@ export default function HowItWorksModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
-                AEGIS-ID Screening Grid — System Architecture & How It Works
+                How ARGUS Works — Passport Inspection in 6 Steps
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Multi-modal AI-assisted document authentication, forensics & identity verification pipeline
+                Each passport goes through 6 automatic checks before a Pass or Fail verdict is given
               </p>
             </div>
           </div>

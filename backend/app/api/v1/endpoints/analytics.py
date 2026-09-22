@@ -3,18 +3,20 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timezone, timedelta
 from ....db.models import SessionLocal, DocumentScan, BlacklistEntry
+from ....models.officer import Officer
+from ....core.dependencies import get_db, require_admin
 
 router = APIRouter()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 @router.get("/checkpoint/metrics", tags=["Analytics"])
-async def get_checkpoint_analytics(db: Session = Depends(get_db)):
+async def get_checkpoint_analytics(
+    db: Session = Depends(get_db),
+    admin: Officer = Depends(require_admin)
+):
+    """
+    Administrative checkpoint throughput and fraud telemetry.
+    Restricted to supervisor / admin officers.
+    """
     total_scans = db.query(DocumentScan).count()
     verified_count = db.query(DocumentScan).filter(DocumentScan.outcome == "VERIFIED").count()
     review_count = db.query(DocumentScan).filter(DocumentScan.outcome == "MANUAL_REVIEW").count()

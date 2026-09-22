@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ShieldAlert, ShieldCheck, Search, Plus, X, Trash2, Zap, AlertTriangle, UserCheck } from 'lucide-react';
 
 export default function WatchlistExplorer({
@@ -44,6 +44,35 @@ export default function WatchlistExplorer({
     setNewReason('');
   };
 
+  // Translate raw system reason strings into human-friendly labels
+  const friendlyReason = (raw = '') => {
+    if (!raw) return 'Security Alert Flag';
+    const r = raw.toLowerCase();
+    if (r.includes('counterfeit') || r.includes('red notice') || r.includes('interpol')) return 'Wanted: Counterfeit Syndicate';
+    if (r.includes('lost') || r.includes('stolen') || r.includes('transit')) return 'Reported Lost or Stolen';
+    if (r.includes('travel ban') || r.includes('visa') || r.includes('sanction') || r.includes('revoked')) return 'Travel Ban (Visa Violation)';
+    if (r.includes('watchlist') || r.includes('security alert') || r.includes('border control')) return 'Border Security Alert';
+    return raw;
+  };
+
+  // Format ISO date string -> "Sep 14, 2026"
+  const formatDate = (raw) => {
+    if (!raw) return 'Active';
+    try {
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return raw;
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch { return raw; }
+  };
+
+  // Human-readable severity label
+  const friendlySeverity = (sev) => {
+    if (sev === 'CRITICAL') return 'Critical Alert';
+    if (sev === 'HIGH') return 'High Priority';
+    if (sev === 'WARN') return 'Warning Notice';
+    return sev || 'Unknown';
+  };
+
   const filtered = watchlist.filter(item =>
     (item.document_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (item.holder_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,18 +87,18 @@ export default function WatchlistExplorer({
           fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, cursive, serif',
           fontStyle: 'italic',
           fontSize: 28,
-          color: '#2E1B24',
+          color: '#0F172A',
         }}>
-          Watchlist & Interpol Registry
+          Flagged Traveler & Stolen ID Watchlist ðŸ¾
         </h1>
-        <p style={{ fontSize: 13, color: '#846271', marginTop: 2 }}>
-          Real-time cross-referencing against Interpol SLTD, National Security lists, and travel bans.
+        <p style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>
+          Instantly checks every scanned passport against national security lists, stolen passport databases, and travel bans.
         </p>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
+      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           1. Live Scanned Document Cross-Check Card
-      ────────────────────────────────────────────────────────────── */}
+      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="card" style={{
         padding: 20,
         background: activeHit ? 'linear-gradient(135deg, #FFF5F7, #FEF1F3)' : 'linear-gradient(135deg, #F9FDFB, #F0F8F3)',
@@ -79,7 +108,7 @@ export default function WatchlistExplorer({
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 46, height: 46, borderRadius: 14,
-              background: activeHit ? '#D14966' : '#4A8C5C',
+              background: activeHit ? '#DC2626' : '#4A8C5C',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: `0 4px 12px ${activeHit ? 'rgba(209,73,102,0.3)' : 'rgba(74,140,92,0.3)'}`,
               flexShrink: 0
@@ -89,11 +118,11 @@ export default function WatchlistExplorer({
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeHit ? '#D14966' : '#4A8C5C' }}>
+                <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeHit ? '#DC2626' : '#4A8C5C' }}>
                   Live Scanned Document Status
                 </span>
                 <span className={`pill ${activeHit ? 'pill-red' : 'pill-green'}`} style={{ fontSize: 10 }}>
-                  {activeHit ? 'CRITICAL MATCH DETECTED' : 'CLEAR — NO MATCH'}
+                  {activeHit ? 'âš ï¸ Alert: Passport is Flagged' : 'Clear â€” No Match Found'}
                 </span>
               </div>
 
@@ -101,18 +130,18 @@ export default function WatchlistExplorer({
                 fontFamily: '"Cormorant Garamond", Georgia, serif',
                 fontStyle: 'italic',
                 fontSize: 22,
-                color: activeHit ? '#96243C' : '#2B5A37',
+                color: activeHit ? '#B91C1C' : '#2B5A37',
                 marginTop: 2,
                 lineHeight: 1.2
               }}>
                 {activeHit ? 'Active Travel Restriction Alert' : 'Verified Clear of All Watchlists'}
               </h2>
 
-              <p style={{ fontSize: 12.5, color: '#573B48', marginTop: 4 }}>
+              <p style={{ fontSize: 12.5, color: '#334155', marginTop: 4 }}>
                 Inspecting: <strong style={{ fontFamily: 'monospace', color: '#1E293B' }}>{activeDocNum}</strong> ({activeName})
                 {activeHit && (
-                  <span style={{ display: 'block', color: '#96243C', fontWeight: 600, marginTop: 2 }}>
-                    Reason: {activeHit.reason} ({activeHit.severity})
+                  <span style={{ display: 'block', color: '#B91C1C', fontWeight: 600, marginTop: 2 }}>
+                    Reason: {friendlyReason(activeHit.reason)} ({friendlySeverity(activeHit.severity)})
                   </span>
                 )}
               </p>
@@ -135,9 +164,9 @@ export default function WatchlistExplorer({
                 type="button"
                 onClick={() => onFlagCurrentDocument && onFlagCurrentDocument(activeDocNum, activeName)}
                 className="btn btn-secondary"
-                style={{ fontSize: 12, padding: '8px 14px', borderRadius: 12, borderColor: '#F8BAC7', color: '#96243C' }}
+                style={{ fontSize: 12, padding: '8px 14px', borderRadius: 12, borderColor: '#F8BAC7', color: '#B91C1C' }}
               >
-                <ShieldAlert size={14} color="#D14966" />
+                <ShieldAlert size={14} color="#DC2626" />
                 <span>Simulate Alert Hit on This ID</span>
               </button>
             )}
@@ -155,11 +184,11 @@ export default function WatchlistExplorer({
               onClick={() => onSelectScenarioPreset && onSelectScenarioPreset('blacklisted_identity')}
               style={{
                 background: '#FFFFFF', border: '1px solid #F8BAC7', borderRadius: 12,
-                padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#96243C', cursor: 'pointer',
+                padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#B91C1C', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 5
               }}
             >
-              <Zap size={12} color="#D14966" />
+              <Zap size={12} color="#DC2626" />
               <span>Viktor Reznikov (Interpol Red Notice: X99887766)</span>
             </button>
 
@@ -179,9 +208,9 @@ export default function WatchlistExplorer({
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
+      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           2. Action & Search Bar
-      ────────────────────────────────────────────────────────────── */}
+      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="card" style={{ padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#FFFFFF' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
@@ -189,13 +218,13 @@ export default function WatchlistExplorer({
             background: '#FEF1F3', border: '1px solid #F8BAC7',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <ShieldAlert size={17} color="#D14966" />
+            <ShieldAlert size={17} color="#DC2626" />
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#2E1B24' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
               Active Registry Database
             </div>
-            <div style={{ fontSize: 11, color: '#846271' }}>
+            <div style={{ fontSize: 11, color: '#64748B' }}>
               {watchlist.length} documents on file
             </div>
           </div>
@@ -203,7 +232,7 @@ export default function WatchlistExplorer({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', width: 'auto' }}>
           <div style={{ position: 'relative', minWidth: 200, flex: '1 1 auto' }}>
-            <Search size={14} color="#B99DAA" style={{ position: 'absolute', left: 12, top: 12 }} />
+            <Search size={14} color="#94A3B8" style={{ position: 'absolute', left: 12, top: 12 }} />
             <input
               type="text"
               placeholder="Search document # or name..."
@@ -223,21 +252,21 @@ export default function WatchlistExplorer({
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
+      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           3. Registry Display: Desktop Table + Mobile Cards
-      ────────────────────────────────────────────────────────────── */}
+      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="card" style={{ overflow: 'hidden', background: '#FFFFFF' }}>
         
         {/* Desktop Table View (Scrolls cleanly if viewport < 650px) */}
         <div className="table-scroll-container">
           <table style={{ width: '100%', minWidth: 620, borderCollapse: 'collapse', textAlign: 'left', fontSize: 12.5 }}>
             <thead>
-              <tr style={{ background: '#FFF8FA', borderBottom: '1.5px solid #F7DFE6', color: '#846271', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+              <tr style={{ background: '#F8FAFC', borderBottom: '1.5px solid #E2E8F0', color: '#64748B', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
                 <th style={{ padding: '12px 16px' }}>Document #</th>
-                <th style={{ padding: '12px 16px' }}>Name</th>
-                <th style={{ padding: '12px 16px' }}>Alert Reason</th>
-                <th style={{ padding: '12px 16px' }}>Severity</th>
-                <th style={{ padding: '12px 16px' }}>Listed Date</th>
+                <th style={{ padding: '12px 16px' }}>Traveler Name</th>
+                <th style={{ padding: '12px 16px' }}>Flag Reason</th>
+                <th style={{ padding: '12px 16px' }}>Severity Level</th>
+                <th style={{ padding: '12px 16px' }}>Date Added</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
@@ -251,30 +280,30 @@ export default function WatchlistExplorer({
               ) : (
                 filtered.map(item => (
                   <tr key={item.id || item.document_number} style={{ borderBottom: '1px solid #F9EBF0' }}>
-                    <td style={{ padding: '14px 16px', fontFamily: '"JetBrains Mono", monospace', fontWeight: 700, color: '#D4789A' }}>
+                    <td style={{ padding: '14px 16px', fontFamily: '"JetBrains Mono", monospace', fontWeight: 700, color: '#0F766E' }}>
                       {item.document_number}
                     </td>
-                    <td style={{ padding: '14px 16px', fontWeight: 600, color: '#2E1B24' }}>
+                    <td style={{ padding: '14px 16px', fontWeight: 600, color: '#0F172A' }}>
                       {item.holder_name}
                     </td>
-                    <td style={{ padding: '14px 16px', color: '#573B48' }}>
-                      {item.reason}
+                    <td style={{ padding: '14px 16px', color: '#334155' }}>
+                      {friendlyReason(item.reason)}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <span className={`pill ${item.severity === 'CRITICAL' ? 'pill-red' : 'pill-amber'}`}>
-                        {item.severity}
+                        {friendlySeverity(item.severity)}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 16px', color: '#846271', fontFamily: '"JetBrains Mono", monospace', fontSize: 11.5 }}>
-                      {item.listed_date || 'Active'}
+                    <td style={{ padding: '14px 16px', color: '#64748B', fontSize: 11.5 }}>
+                      {formatDate(item.listed_date)}
                     </td>
                     <td style={{ padding: '14px 16px', textAlign: 'right' }}>
                       <button
                         type="button"
                         onClick={() => onRemoveFromWatchlist && onRemoveFromWatchlist(item.document_number)}
                         style={{
-                          background: '#FFF5F8', border: '1px solid #F5D2DC', borderRadius: 8,
-                          padding: '4px 8px', color: '#D14966', cursor: 'pointer', fontSize: 11
+                          background: '#F0FDFA', border: '1px solid #CBD5E1', borderRadius: 8,
+                          padding: '4px 8px', color: '#DC2626', cursor: 'pointer', fontSize: 11
                         }}
                         title="Deactivate entry"
                       >
@@ -289,9 +318,9 @@ export default function WatchlistExplorer({
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
+      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           4. Add Document Modal
-      ────────────────────────────────────────────────────────────── */}
+      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showAddModal && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 120,
@@ -301,7 +330,7 @@ export default function WatchlistExplorer({
         }}>
           <div style={{
             background: '#FFFFFF',
-            border: '1.5px solid #F3D0DC',
+            border: '1.5px solid #E2E8F0',
             borderRadius: 22,
             width: '100%',
             maxWidth: 420,
@@ -313,18 +342,18 @@ export default function WatchlistExplorer({
                 fontFamily: '"Cormorant Garamond", Georgia, cursive, serif',
                 fontStyle: 'italic',
                 fontSize: 22,
-                color: '#2E1B24',
+                color: '#0F172A',
               }}>
                 Add Document to Alert List
               </h3>
-              <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#B99DAA' }}>
+              <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8' }}>
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#573B48', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
                   Document Number
                 </label>
                 <input
@@ -337,7 +366,7 @@ export default function WatchlistExplorer({
               </div>
 
               <div>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#573B48', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
                   Holder Name
                 </label>
                 <input
@@ -350,7 +379,7 @@ export default function WatchlistExplorer({
               </div>
 
               <div>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#573B48', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
                   Reason for Flag
                 </label>
                 <input
@@ -362,7 +391,7 @@ export default function WatchlistExplorer({
               </div>
 
               <div>
-                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#573B48', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
                   Severity Level
                 </label>
                 <select
@@ -370,7 +399,7 @@ export default function WatchlistExplorer({
                   onChange={e => setNewSeverity(e.target.value)}
                   style={{
                     width: '100%', padding: '10px 14px', borderRadius: 12,
-                    border: '1.5px solid #F3D0DC', fontSize: 12, background: '#FFFFFF', color: '#2E1B24'
+                    border: '1.5px solid #E2E8F0', fontSize: 12, background: '#FFFFFF', color: '#0F172A'
                   }}
                 >
                   <option value="CRITICAL">CRITICAL (Immediate Arrest / Confiscate)</option>
@@ -394,3 +423,4 @@ export default function WatchlistExplorer({
     </div>
   );
 }
+

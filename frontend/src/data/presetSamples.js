@@ -163,8 +163,8 @@ export const createLiveSelfie = (variant = "authentic") => {
 export const PRESET_SCENARIOS = [
   {
     id: "genuine_passport",
-    title: "1. Authentic Passport (Clean)",
-    subtitle: "Valid ICAO Check-Digits, Uniform Noise, Matching Biometrics",
+    title: "Genuine Passport",
+    subtitle: "Valid security codes, clean document photo, matching live face",
     expectedVerdict: "VERIFIED",
     badgeColor: "emerald",
     documentImage: createSyntheticPassport({
@@ -180,8 +180,8 @@ export const PRESET_SCENARIOS = [
   },
   {
     id: "tampered_expiry_ela",
-    title: "2. Altered Expiry Date (ELA Spliced)",
-    subtitle: "Visual Expiry altered with photo editor; triggers ELA & SRM anomalies",
+    title: "Altered Expiry Date",
+    subtitle: "Expiry date was digitally modified with photo editing software",
     expectedVerdict: "MANUAL_REVIEW / REJECTED",
     badgeColor: "rose",
     documentImage: createSyntheticPassport({
@@ -198,8 +198,8 @@ export const PRESET_SCENARIOS = [
   },
   {
     id: "fake_mrz_checksum",
-    title: "3. Fake MRZ Checksum Fraud",
-    subtitle: "Counterfeit passport with mathematically corrupted check digits",
+    title: "Fake Security Codes",
+    subtitle: "Bottom line code numbers do not calculate or add up correctly",
     expectedVerdict: "REJECTED",
     badgeColor: "rose",
     documentImage: createSyntheticPassport({
@@ -209,13 +209,13 @@ export const PRESET_SCENARIOS = [
     liveFace: createLiveSelfie("authentic"),
     mrzLines: [
       "P<UTODAVIS<<JONATHAN<<<<<<<<<<<<<<<<<<<<<<<<",
-      "P994411009UTO8001011M2501019ZE184226B<<<<<99" // Corrupted check digit 9 instead of calculated
+      "P994411009UTO8001011M2501019ZE184226B<<<<<99"
     ]
   },
   {
     id: "screen_recapture_moire",
-    title: "4. Screen-Replay Recapture",
-    subtitle: "Photograph taken off a mobile screen; triggers 2D FFT Moire raster",
+    title: "Phone Screen Photo",
+    subtitle: "Photo taken off a phone screen instead of physical paper passport",
     expectedVerdict: "REJECTED",
     badgeColor: "amber",
     documentImage: createSyntheticPassport({
@@ -231,8 +231,8 @@ export const PRESET_SCENARIOS = [
   },
   {
     id: "biometric_impersonator",
-    title: "5. Biometric Impersonation",
-    subtitle: "Live passenger face does not match document portrait photo",
+    title: "Face Mismatch",
+    subtitle: "Person standing at checkpoint does not match passport portrait",
     expectedVerdict: "REJECTED",
     badgeColor: "rose",
     documentImage: createSyntheticPassport({
@@ -247,8 +247,8 @@ export const PRESET_SCENARIOS = [
   },
   {
     id: "blacklisted_identity",
-    title: "6. Interpol Blacklisted Document",
-    subtitle: "Watchlist hit for known counterfeit travel syndicate passport",
+    title: "Stolen ID Watchlist",
+    subtitle: "Passport number matches Interpol lost and stolen database alert",
     expectedVerdict: "REJECTED (CRITICAL)",
     badgeColor: "purple",
     documentImage: createSyntheticPassport({

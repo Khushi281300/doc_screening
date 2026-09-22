@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   FileCheck2, 
   ShieldCheck, 
@@ -80,11 +80,11 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
           fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, cursive, serif',
           fontStyle: 'italic',
           fontSize: 28,
-          color: '#2E1B24',
+          color: '#0F172A',
         }}>
           Inspection History & Receipts
         </h1>
-        <p style={{ fontSize: 13, color: '#846271', marginTop: 2 }}>
+        <p style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>
           Tamper-proof audit logs and downloadable verification certificates for border crossings.
         </p>
       </div>
@@ -94,16 +94,16 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 14,
-            background: '#FDEEF3', border: '1px solid #F3D0DC',
+            background: '#FDEEF3', border: '1px solid #E2E8F0',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <ShieldCheck size={22} color="#D4789A" />
+            <ShieldCheck size={22} color="#0F766E" />
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#2E1B24' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
               Verification Certificate Generator
             </div>
-            <div style={{ fontSize: 12, color: '#846271' }}>
+            <div style={{ fontSize: 12, color: '#64748B' }}>
               Create an official signed slip for the passenger or record keeping
             </div>
           </div>
@@ -121,11 +121,11 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
 
       {/* Generated Certificate Card */}
       {certificate && (
-        <div className="card" style={{ padding: 22, background: '#FFFDFD', border: '1.5px solid #F3D0DC' }}>
+        <div className="card" style={{ padding: 22, background: '#FFFDFD', border: '1.5px solid #E2E8F0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <CheckCircle size={18} color="#4A8C5C" />
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#2E1B24' }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
                 Official Clearance Slip #{certificate.certificate_id}
               </span>
             </div>
@@ -134,23 +134,23 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
               className="btn btn-secondary"
               style={{ fontSize: 12, padding: '6px 14px' }}
             >
-              <Download size={13} color="#D4789A" />
+              <Download size={13} color="#0F766E" />
               <span>Print Slip</span>
             </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, fontSize: 12.5 }}>
-            <div style={{ padding: 10, borderRadius: 10, background: '#FFF8FA', border: '1px solid #F7DFE6' }}>
-              <span style={{ fontSize: 11, color: '#846271', display: 'block' }}>Document Checked</span>
-              <strong style={{ color: '#2E1B24' }}>{certificate.document_id || 'L898902C3'}</strong>
+            <div style={{ padding: 10, borderRadius: 10, background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+              <span style={{ fontSize: 11, color: '#64748B', display: 'block' }}>Document Checked</span>
+              <strong style={{ color: '#0F172A' }}>{certificate.document_id || 'L898902C3'}</strong>
             </div>
-            <div style={{ padding: 10, borderRadius: 10, background: '#FFF8FA', border: '1px solid #F7DFE6' }}>
-              <span style={{ fontSize: 11, color: '#846271', display: 'block' }}>Inspecting Officer</span>
-              <strong style={{ color: '#2E1B24' }}>{certificate.issuer || 'Uzumaki Naruto'}</strong>
+            <div style={{ padding: 10, borderRadius: 10, background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+              <span style={{ fontSize: 11, color: '#64748B', display: 'block' }}>Inspecting Officer</span>
+              <strong style={{ color: '#0F172A' }}>{certificate.issuer || 'Uzumaki Naruto'}</strong>
             </div>
-            <div style={{ padding: 10, borderRadius: 10, background: '#FFF8FA', border: '1px solid #F7DFE6' }}>
-              <span style={{ fontSize: 11, color: '#846271', display: 'block' }}>Time of Issue</span>
-              <strong style={{ color: '#2E1B24' }}>{certificate.issue_time || 'Just now'}</strong>
+            <div style={{ padding: 10, borderRadius: 10, background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+              <span style={{ fontSize: 11, color: '#64748B', display: 'block' }}>Time of Issue</span>
+              <strong style={{ color: '#0F172A' }}>{certificate.issue_time || 'Just now'}</strong>
             </div>
             <div style={{ padding: 10, borderRadius: 10, background: '#F0F8F3', border: '1px solid #BCDCC7' }}>
               <span style={{ fontSize: 11, color: '#3B734A', display: 'block' }}>Result</span>
@@ -170,8 +170,8 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
               style={{
                 padding: '12px 16px',
                 borderRadius: 14,
-                background: '#FFF8FA',
-                border: '1px solid #F7DFE6',
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -184,19 +184,19 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
                   <span style={{
                     fontFamily: '"JetBrains Mono", monospace',
                     fontSize: 11, fontWeight: 700,
-                    background: '#FDEEF3', color: '#B25779',
+                    background: '#FDEEF3', color: '#0F766E',
                     padding: '2px 8px', borderRadius: 6,
                   }}>
                     Entry #{block.block_index}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#2E1B24' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
                     {block.event_type}
                   </span>
                 </div>
                 <div style={{
                   fontSize: 11,
                   fontFamily: '"JetBrains Mono", monospace',
-                  color: '#846271',
+                  color: '#64748B',
                   marginTop: 4,
                   wordBreak: 'break-all',
                 }}>
@@ -208,7 +208,7 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
                 onClick={() => copyToClipboard(block.block_hash)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
-                  fontSize: 11, color: '#D4789A',
+                  fontSize: 11, color: '#0F766E',
                   background: 'none', border: 'none', cursor: 'pointer',
                   fontWeight: 600,
                 }}
@@ -223,3 +223,4 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
     </div>
   );
 }
+

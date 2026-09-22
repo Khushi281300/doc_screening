@@ -4,15 +4,10 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from ....db.models import SessionLocal, BlacklistEntry
 from ....db.vector_store import face_vector_store
+from ....models.officer import Officer
+from ....core.dependencies import get_db, get_current_officer, require_admin
 
 router = APIRouter()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 class BlacklistAddRequest(BaseModel):
     document_number: str
@@ -21,7 +16,10 @@ class BlacklistAddRequest(BaseModel):
     severity: str = "HIGH"
 
 @router.get("/watchlist", tags=["Watchlist"])
-async def get_watchlist(db: Session = Depends(get_db)):
+async def get_watchlist(
+    db: Session = Depends(get_db),
+    officer: Officer = Depends(get_current_officer)
+):
     entries = db.query(BlacklistEntry).filter(BlacklistEntry.active == True).all()
     return {
         "status": "SUCCESS",
@@ -40,7 +38,12 @@ async def get_watchlist(db: Session = Depends(get_db)):
     }
 
 @router.post("/watchlist/add", tags=["Watchlist"])
-async def add_to_watchlist(req: BlacklistAddRequest, db: Session = Depends(get_db)):
+async def add_to_watchlist(
+    req: BlacklistAddRequest, 
+    db: Session = Depends(get_db),
+    admin: Officer = Depends(require_admin)
+):
+    """Admin-only endpoint to register a new identity on the watchlist."""
     existing = db.query(BlacklistEntry).filter(BlacklistEntry.document_number == req.document_number.upper()).first()
     if existing:
         existing.reason = req.reason
@@ -61,7 +64,12 @@ async def add_to_watchlist(req: BlacklistAddRequest, db: Session = Depends(get_d
     return {"status": "SUCCESS", "message": "Added to watchlist"}
 
 @router.delete("/watchlist/{document_number}", tags=["Watchlist"])
-async def remove_from_watchlist(document_number: str, db: Session = Depends(get_db)):
+async def remove_from_watchlist(
+    document_number: str, 
+    db: Session = Depends(get_db),
+    admin: Officer = Depends(require_admin)
+):
+    """Admin-only endpoint to deactivate a watchlist entry."""
     entry = db.query(BlacklistEntry).filter(BlacklistEntry.document_number == document_number.upper()).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")

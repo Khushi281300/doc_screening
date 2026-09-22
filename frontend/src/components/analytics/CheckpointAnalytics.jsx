@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -18,11 +18,11 @@ export default function CheckpointAnalytics() {
     average_inspection_time_sec: 1.4,
     active_officers_count: 6,
     attack_vectors: [
-      { name: "Passport Number / Checksum Alteration", count: 14, percentage: 38.0, color: "#D14966" },
-      { name: "Digital Photo Editing (Photoshop)", count: 11, percentage: 30.0, color: "#D4789A" },
+      { name: "Passport Number / Checksum Alteration", count: 14, percentage: 38.0, color: "#DC2626" },
+      { name: "Digital Photo Editing (Photoshop)", count: 11, percentage: 30.0, color: "#0F766E" },
       { name: "Screen Photo / Replay Attack", count: 6, percentage: 16.0, color: "#B66D26" },
-      { name: "Wrong Person / Face Mismatch", count: 4, percentage: 11.0, color: "#B25779" },
-      { name: "Alert List Matches", count: 2, percentage: 5.0, color: "#846271" }
+      { name: "Wrong Person / Face Mismatch", count: 4, percentage: 11.0, color: "#0F766E" },
+      { name: "Alert List Matches", count: 2, percentage: 5.0, color: "#64748B" }
     ],
     hourly_throughput: [
       { hour: "08:00", scans: 18, flagged: 1 },
@@ -54,11 +54,11 @@ export default function CheckpointAnalytics() {
           fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, cursive, serif',
           fontStyle: 'italic',
           fontSize: 28,
-          color: '#2E1B24',
+          color: '#0F172A',
         }}>
           Daily Checkpoint Summary
         </h1>
-        <p style={{ fontSize: 13, color: '#846271', marginTop: 2 }}>
+        <p style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>
           Today's inspection volume, detection rates, and common forgery patterns.
         </p>
       </div>
@@ -67,8 +67,8 @@ export default function CheckpointAnalytics() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
         <div className="card" style={{ padding: 18, background: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#846271', textTransform: 'uppercase' }}>Documents Checked Today</span>
-            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#2E1B24', marginTop: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Documents Checked Today</span>
+            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#0F172A', marginTop: 4 }}>
               {metrics.total_scans_today}
             </div>
             <div style={{ fontSize: 11, color: '#4A8C5C', display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
@@ -76,32 +76,32 @@ export default function CheckpointAnalytics() {
             </div>
           </div>
           <div style={{ width: 44, height: 44, borderRadius: 14, background: '#FDEEF3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <BarChart3 size={20} color="#D4789A" />
+            <BarChart3 size={20} color="#0F766E" />
           </div>
         </div>
 
         <div className="card" style={{ padding: 18, background: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#846271', textTransform: 'uppercase' }}>Fraud Rate</span>
-            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#D14966', marginTop: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Fraud Rate</span>
+            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#DC2626', marginTop: 4 }}>
               {metrics.fraud_rate_percentage}%
             </div>
-            <div style={{ fontSize: 11, color: '#846271', marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
               {metrics.rejected_count} fraudulent IDs intercepted
             </div>
           </div>
           <div style={{ width: 44, height: 44, borderRadius: 14, background: '#FEF1F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShieldAlert size={20} color="#D14966" />
+            <ShieldAlert size={20} color="#DC2626" />
           </div>
         </div>
 
         <div className="card" style={{ padding: 18, background: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#846271', textTransform: 'uppercase' }}>Avg AI Speed</span>
-            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#2E1B24', marginTop: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Avg AI Speed</span>
+            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#0F172A', marginTop: 4 }}>
               {metrics.average_inspection_time_sec}s
             </div>
-            <div style={{ fontSize: 11, color: '#846271', marginTop: 4 }}>
+            <div style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
               Instant verification
             </div>
           </div>
@@ -112,8 +112,8 @@ export default function CheckpointAnalytics() {
 
         <div className="card" style={{ padding: 18, background: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#846271', textTransform: 'uppercase' }}>Active Checkpoints</span>
-            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#2E1B24', marginTop: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Active Checkpoints</span>
+            <div style={{ fontSize: 26, fontWeight: 800, fontFamily: '"JetBrains Mono", monospace', color: '#0F172A', marginTop: 4 }}>
               {metrics.active_officers_count} Lanes
             </div>
             <div style={{ fontSize: 11, color: '#4A8C5C', marginTop: 4 }}>
@@ -135,8 +135,8 @@ export default function CheckpointAnalytics() {
             {metrics.attack_vectors.map((vec, idx) => (
               <div key={idx}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
-                  <span style={{ fontWeight: 600, color: '#573B48' }}>{vec.name}</span>
-                  <span style={{ fontFamily: '"JetBrains Mono", monospace', fontWeight: 700, color: '#2E1B24' }}>
+                  <span style={{ fontWeight: 600, color: '#334155' }}>{vec.name}</span>
+                  <span style={{ fontFamily: '"JetBrains Mono", monospace', fontWeight: 700, color: '#0F172A' }}>
                     {vec.count} cases ({vec.percentage}%)
                   </span>
                 </div>
@@ -157,7 +157,7 @@ export default function CheckpointAnalytics() {
               const heightPct = Math.round((item.scans / maxScans) * 100);
               return (
                 <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, fontFamily: '"JetBrains Mono", monospace', color: '#846271' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, fontFamily: '"JetBrains Mono", monospace', color: '#64748B' }}>
                     {item.scans}
                   </div>
                   <div style={{
@@ -165,9 +165,9 @@ export default function CheckpointAnalytics() {
                     height: `${heightPct}%`,
                     minHeight: 12,
                     borderRadius: '8px 8px 4px 4px',
-                    background: 'linear-gradient(180deg, #D4789A, #F3D0DC)',
+                    background: 'linear-gradient(180deg, #0F766E, #E2E8F0)',
                   }} />
-                  <div style={{ fontSize: 10.5, color: '#B99DAA', fontFamily: '"JetBrains Mono", monospace' }}>
+                  <div style={{ fontSize: 10.5, color: '#94A3B8', fontFamily: '"JetBrains Mono", monospace' }}>
                     {item.hour}
                   </div>
                 </div>
@@ -179,3 +179,4 @@ export default function CheckpointAnalytics() {
     </div>
   );
 }
+

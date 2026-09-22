@@ -15,6 +15,7 @@ class DocumentScan(Base):
     scan_id = Column(String, unique=True, index=True)
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     officer_id = Column(String, default="OFFICER-742")
+    officer_name = Column(String, nullable=True)
     checkpoint_id = Column(String, default="BOMBAY-INTL-T2-E4")
     
     # Document Fields
@@ -70,7 +71,22 @@ class AuditLedgerBlock(Base):
     digital_signature = Column(String)
 
 def init_db():
+    from ..models.officer import Officer  # noqa: F401 - registers Officer table with Base
+    from .seed import seed_demo_officers
+    from sqlalchemy import text
     Base.metadata.create_all(bind=engine)
+    
+    # Auto-migrate document_scans table if officer_name column is missing in existing sqlite DB
+    with engine.connect() as conn:
+        try:
+            res = conn.execute(text("PRAGMA table_info(document_scans)"))
+            columns = [row[1] for row in res.fetchall()]
+            if columns and "officer_name" not in columns:
+                conn.execute(text("ALTER TABLE document_scans ADD COLUMN officer_name VARCHAR"))
+                conn.commit()
+        except Exception:
+            pass
+
     db = SessionLocal()
     # Seed sample blacklist if empty
     if db.query(BlacklistEntry).count() == 0:
@@ -99,4 +115,7 @@ def init_db():
         ]
         db.add_all(sample_entries)
         db.commit()
+
+    # Seed demo officers if empty
+    seed_demo_officers(db)
     db.close()

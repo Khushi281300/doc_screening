@@ -45,7 +45,9 @@ class MerkleAuditLedger:
         doc_number: str, 
         outcome: str, 
         risk_score: float, 
-        officer_id: str
+        officer_id: str,
+        officer_name: Optional[str] = None,
+        checkpoint_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Appends an immutable verification event block to the cryptographic ledger.
@@ -60,6 +62,8 @@ class MerkleAuditLedger:
             "outcome": outcome,
             "risk_score": risk_score,
             "officer_id": officer_id,
+            "officer_name": officer_name,
+            "checkpoint_id": checkpoint_id,
             "timestamp": current_time
         }
         payload_hash = hash_document_payload(event_payload)
