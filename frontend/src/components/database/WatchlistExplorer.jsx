@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ShieldAlert, ShieldCheck, Search, Plus, X, Trash2, Zap, AlertTriangle, UserCheck } from 'lucide-react';
 
 export default function WatchlistExplorer({
@@ -19,7 +19,7 @@ export default function WatchlistExplorer({
 
   // Currently inspected document info
   const activeDocNum = (customMetadata?.documentNumber || currentScan?.document_fields?.document_number || 'P74209188').toUpperCase();
-  const activeName   = (customMetadata?.fullName || currentScan?.document_fields?.full_name || 'UZUMAKI NARUTO').toUpperCase();
+  const activeName   = (customMetadata?.fullName || currentScan?.document_fields?.full_name || '').toUpperCase();
 
   // Check if currently active document matches any watchlist entry
   const activeHit = watchlist.find(item =>
@@ -84,21 +84,19 @@ export default function WatchlistExplorer({
       {/* Title */}
       <div>
         <h1 style={{
-          fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, cursive, serif',
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           fontStyle: 'italic',
           fontSize: 28,
           color: '#0F172A',
         }}>
-          Flagged Traveler & Stolen ID Watchlist ðŸ¾
+          Flagged Traveler & Stolen ID Watchlist
         </h1>
         <p style={{ fontSize: 13, color: '#64748B', marginTop: 2 }}>
           Instantly checks every scanned passport against national security lists, stolen passport databases, and travel bans.
         </p>
       </div>
 
-      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          1. Live Scanned Document Cross-Check Card
-      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      
       <div className="card" style={{
         padding: 20,
         background: activeHit ? 'linear-gradient(135deg, #FFF5F7, #FEF1F3)' : 'linear-gradient(135deg, #F9FDFB, #F0F8F3)',
@@ -122,12 +120,12 @@ export default function WatchlistExplorer({
                   Live Scanned Document Status
                 </span>
                 <span className={`pill ${activeHit ? 'pill-red' : 'pill-green'}`} style={{ fontSize: 10 }}>
-                  {activeHit ? 'âš ï¸ Alert: Passport is Flagged' : 'Clear â€” No Match Found'}
+                  {activeHit ? 'Alert: Passport is Flagged' : 'Clear — No Match Found'}
                 </span>
               </div>
 
               <h2 style={{
-                fontFamily: '"Cormorant Garamond", Georgia, serif',
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                 fontStyle: 'italic',
                 fontSize: 22,
                 color: activeHit ? '#B91C1C' : '#2B5A37',
@@ -208,9 +206,7 @@ export default function WatchlistExplorer({
         </div>
       </div>
 
-      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          2. Action & Search Bar
-      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      
       <div className="card" style={{ padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#FFFFFF' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
@@ -252,9 +248,7 @@ export default function WatchlistExplorer({
         </div>
       </div>
 
-      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          3. Registry Display: Desktop Table + Mobile Cards
-      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      
       <div className="card" style={{ overflow: 'hidden', background: '#FFFFFF' }}>
         
         {/* Desktop Table View (Scrolls cleanly if viewport < 650px) */}
@@ -318,9 +312,7 @@ export default function WatchlistExplorer({
         </div>
       </div>
 
-      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-          4. Add Document Modal
-      â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      
       {showAddModal && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 120,

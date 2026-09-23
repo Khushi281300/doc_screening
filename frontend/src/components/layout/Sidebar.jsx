@@ -9,7 +9,8 @@ import {
   Users,
   AlertTriangle,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Bot
 } from 'lucide-react';
 import { playPop } from '../../utils/soundEffects';
 
@@ -67,7 +68,7 @@ const SECONDARY_NAV = [
   }
 ];
 
-export default function Sidebar({ activeTab, onSelectTab }) {
+export default function Sidebar({ activeTab, onSelectTab, onOpenCopilot }) {
   return (
     <aside className="dashboard-sidebar-fixed" aria-label="Main Navigation">
       {/* Brand & System Identifier */}
@@ -291,6 +292,43 @@ export default function Sidebar({ activeTab, onSelectTab }) {
           </nav>
         </div>
       </div>
+
+      {/* AI Assistant Button — docked above telemetry */}
+      {onOpenCopilot && (
+        <div style={{ padding: '8px 14px', borderTop: '1px solid var(--border)' }}>
+          <button
+            onClick={() => { playPop(); onOpenCopilot(); }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '9px 12px',
+              borderRadius: 6,
+              border: '1px solid #99F6E4',
+              background: '#F0FDFA',
+              color: '#0F766E',
+              cursor: 'pointer',
+              fontSize: '12.5px',
+              fontWeight: 700,
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#CCFBF1'}
+            onMouseLeave={e => e.currentTarget.style.background = '#F0FDFA'}
+          >
+            <Bot size={14} />
+            <span style={{ flex: 1, textAlign: 'left' }}>Officer AI Assistant</span>
+            <span style={{
+              background: '#0D9488',
+              color: '#FFFFFF',
+              fontSize: '9px',
+              padding: '1px 5px',
+              borderRadius: 3,
+              fontWeight: 700
+            }}>Online</span>
+          </button>
+        </div>
+      )}
 
       {/* Station Telemetry Footer */}
       <div style={{

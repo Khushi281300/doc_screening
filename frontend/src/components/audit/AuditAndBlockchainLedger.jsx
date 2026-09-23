@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileCheck2, 
   ShieldCheck, 
@@ -22,7 +22,7 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
       timestamp: Date.now() / 1000 - 1200,
       event_type: "PASSPORT_CHECK_PASSED",
       block_hash: "8f73b1a209e8d47c6b5a3f2e1d0c9b8a7f6e5d4c3b2a109876543210abcdef12",
-      digital_signature: "OFFICER_UZUMAKI_NARUTO_SIGNED"
+      digital_signature: "OFFICER_SIGNATURE_VERIFIED_SHA256"
     }
   ]);
   const [certificate, setCertificate] = useState(null);
@@ -59,7 +59,7 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
         certificate_id: "CERT-2026-78904",
         issue_time: new Date().toLocaleTimeString(),
         status: "OFFICIALLY_VERIFIED",
-        issuer: "Uzumaki Naruto",
+        issuer: "Border Clearance Officer",
         document_id: "L898902C3",
         hash: "7d8a9b1c2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b"
       });
@@ -146,7 +146,7 @@ export default function AuditAndBlockchainLedger({ latestScan }) {
             </div>
             <div style={{ padding: 10, borderRadius: 10, background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
               <span style={{ fontSize: 11, color: '#64748B', display: 'block' }}>Inspecting Officer</span>
-              <strong style={{ color: '#0F172A' }}>{certificate.issuer || 'Uzumaki Naruto'}</strong>
+              <strong style={{ color: '#0F172A' }}>{certificate.issuer || 'Border Clearance Officer'}</strong>
             </div>
             <div style={{ padding: 10, borderRadius: 10, background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
               <span style={{ fontSize: 11, color: '#64748B', display: 'block' }}>Time of Issue</span>

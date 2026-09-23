@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { CheckCircle2, XCircle, AlertTriangle, FileText, Check, ShieldAlert, Sparkles, UserCheck, ShieldCheck } from 'lucide-react';
+import React from 'react';
+import { CheckCircle2, XCircle, AlertTriangle, FileText, ClipboardList } from 'lucide-react';
 import { playPop } from '../../utils/soundEffects';
 
 // Helper to convert technical jargon into crystal clear plain English
@@ -30,21 +30,11 @@ const simplifyFinding = (text = '') => {
 };
 
 export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
-  const data = riskEvaluation || {
-    outcome: 'VERIFIED',
-    overall_risk_score: 96,
-    recommendation: 'All security checks passed. The document is authentic.',
-    critical_failures: [],
-    warning_flags: [],
-    factor_breakdown: {
-      document_quality: { score: 94, status: 'PASS' },
-      mrz_integrity: { score: 100, status: 'PASS' },
-      forensic_integrity: { score: 96, status: 'PASS' },
-      biometric_verification: { score: 95, status: 'PASS' },
-      database_watchlist: { score: 100, status: 'PASS' },
-    }
-  };
+  if (!riskEvaluation) {
+    return null;
+  }
 
+  const data = riskEvaluation;
   const isPass   = data.outcome === 'VERIFIED';
   const isReview = data.outcome === 'MANUAL_REVIEW';
   const factors  = data.factor_breakdown || {};
@@ -56,7 +46,7 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
     icon: <CheckCircle2 size={26} color="#FFFFFF" />,
     badgeBg: '#DCFCE7',
     badgeText: '#15803D',
-    title: 'Passport Is Genuine & Valid ðŸ¾',
+    title: 'Passport Genuine & Valid',
     titleColor: '#166534',
     simpleSummary: 'All security checks passed. The photo, security codes, and identity details are authentic.',
     action: 'Safe to proceed: Authorize passenger entry.',
@@ -70,7 +60,7 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
     icon: <AlertTriangle size={26} color="#FFFFFF" />,
     badgeBg: '#FEF3C7',
     badgeText: '#92400E',
-    title: 'Needs Physical Check by Officer ðŸ”',
+    title: 'Needs Officer Check',
     titleColor: '#92400E',
     simpleSummary: 'The document image is uncertain or incomplete. Please inspect the physical document.',
     action: 'Recommended Action: Inspect physical security features (watermark, UV glow, and holograms).',
@@ -84,7 +74,7 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
     icon: <XCircle size={26} color="#FFFFFF" />,
     badgeBg: '#FEE2E2',
     badgeText: '#991B1B',
-    title: 'Passport Rejected â€” Forgery or Alert Found âš ï¸',
+    title: 'Passport Rejected — Forgery or Alert Found',
     titleColor: '#991B1B',
     simpleSummary: 'One or more major security checks failed. This document should not be accepted.',
     action: 'Action Required: Deny entry and notify supervisor immediately.',
@@ -112,7 +102,7 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
     {
       key: 'biometric_verification',
       title: 'Face Match Verification',
-      desc: 'Compares travelerâ€™s live camera face to the passport portrait',
+      desc: "Compares traveler's live camera face to the passport portrait",
     },
     {
       key: 'database_watchlist',
@@ -126,51 +116,50 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
       id="inspection_findings_card"
       style={{
         background: '#FFFFFF',
-        borderRadius: 22,
-        border: '1.5px solid #E2E8F0',
-        boxShadow: '0 6px 24px rgba(255, 141, 161, 0.1)',
-        padding: '24px 26px',
+        borderRadius: 16,
+        border: '1px solid #E2E8F0',
+        padding: '20px 24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 20,
+        gap: 18,
         fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif"
       }}
     >
-      {/* 1. Header & Verdict Banner */}
+      {/* 1. Full-Width Verdict Banner */}
       <div style={{
         background: theme.bg,
         border: `1.5px solid ${theme.border}`,
-        borderRadius: 18,
-        padding: '18px 22px',
+        borderRadius: 14,
+        padding: '16px 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: 16
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 260 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 260 }}>
           <div style={{
-            width: 52,
-            height: 52,
-            borderRadius: 16,
+            width: 48,
+            height: 48,
+            borderRadius: 12,
             background: theme.iconBg,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
           }}>
             {theme.icon}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: theme.titleColor }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: theme.titleColor }}>
                 {theme.title}
               </h2>
               <span style={{
                 background: theme.badgeBg,
                 color: theme.badgeText,
-                padding: '3px 12px',
+                padding: '3px 10px',
                 borderRadius: 999,
                 fontSize: 12,
                 fontWeight: 800,
@@ -179,9 +168,12 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
                 Safety Score: {data.overall_risk_score} / 100
               </span>
             </div>
-            <p style={{ margin: '6px 0 0 0', fontSize: 13.5, color: '#374151', lineHeight: 1.45 }}>
+            <p style={{ margin: '4px 0 0 0', fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
               {theme.simpleSummary}
             </p>
+            <div style={{ fontSize: 11, color: '#64748B', marginTop: 3 }}>
+              Scores above 80 indicate an authentic, verified document.
+            </div>
           </div>
         </div>
 
@@ -191,22 +183,8 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
               playPop();
               onViewAudit();
             }}
-            style={{
-              background: '#FFFFFF',
-              border: '1.5px solid #E2E8F0',
-              borderRadius: 12,
-              padding: '8px 14px',
-              color: '#0D9488',
-              fontSize: 12.5,
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              transition: 'all 0.15s ease'
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F0FDFA'}
-            onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+            className="btn btn-secondary"
+            style={{ fontSize: 12, padding: '7px 12px' }}
           >
             <FileText size={14} />
             <span>Audit History</span>
@@ -219,31 +197,31 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
         <div style={{
           background: '#FEF2F2',
           border: '1.5px solid #FECACA',
-          borderRadius: 14,
-          padding: '16px 18px',
+          borderRadius: 12,
+          padding: '14px 16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 10
+          gap: 8
         }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#991B1B', display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span>âš ï¸</span>
+            <AlertTriangle size={15} color="#DC2626" />
             <span>Why This Passport Was Flagged:</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {data.critical_failures.map((item, idx) => (
               <div key={idx} style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 10,
-                fontSize: 13.5,
+                gap: 8,
+                fontSize: 13,
                 color: '#7F1D1D',
                 background: '#FFFFFF',
-                padding: '10px 14px',
-                borderRadius: 10,
+                padding: '8px 12px',
+                borderRadius: 8,
                 border: '1px solid #FEE2E2',
                 fontWeight: 600
               }}>
-                <XCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                <XCircle size={15} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
                 <span>{simplifyFinding(item)}</span>
               </div>
             ))}
@@ -251,34 +229,30 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
         </div>
       )}
 
-      {/* 3. The 5 Security Checks (Clean Plain-English Grid) */}
+      {/* 3. The 5 Security Checks (Clean Plain-English Grid, quiet icons for pass) */}
       <div>
-        <div style={{ marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
-            Inspection Findings â€” What Was Checked:
+        <div style={{ marginBottom: 10 }}>
+          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+            Inspection Findings — What Was Checked:
           </h3>
-          <p style={{ margin: '3px 0 0 0', fontSize: 12, color: '#64748B' }}>
+          <p style={{ margin: '2px 0 0 0', fontSize: 12, color: '#64748B' }}>
             The AI automatically checked these 5 safety points on the passport.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
           {CHECKS.map(c => {
             const factor = factors[c.key] || { score: 95, status: 'PASS' };
             const isPending = factor.status === 'PENDING' || factor.status === 'NOT_CAPTURED';
             const passed = factor.status === 'PASS' || (!isPending && factor.score >= 70);
 
-            const cardBg = isPending ? '#FFFBEB' : passed ? '#F0FDF4' : '#FEF2F2';
-            const cardBorder = isPending ? '#FDE68A' : passed ? '#BBF7D0' : '#FECACA';
-            const textColor = isPending ? '#92400E' : passed ? '#166534' : '#991B1B';
-
             return (
               <div
                 key={c.key}
                 style={{
-                  background: cardBg,
-                  border: `1.5px solid ${cardBorder}`,
-                  borderRadius: 14,
+                  background: isPending ? '#FFFBEB' : passed ? '#F8FAFC' : '#FEF2F2',
+                  border: `1px solid ${isPending ? '#FDE68A' : passed ? '#E2E8F0' : '#FECACA'}`,
+                  borderRadius: 10,
                   padding: '12px 14px',
                   display: 'flex',
                   alignItems: 'flex-start',
@@ -287,29 +261,29 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#1F2937' }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1F2937' }}>
                     {c.title}
                   </div>
-                  <div style={{ fontSize: 11.5, color: '#4B5563', marginTop: 3, lineHeight: 1.35 }}>
+                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 2, lineHeight: 1.35 }}>
                     {c.desc}
                   </div>
                 </div>
 
-                <span style={{
-                  flexShrink: 0,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  padding: '3px 8px',
-                  borderRadius: 6,
-                  background: '#FFFFFF',
-                  color: textColor,
-                  border: `1px solid ${cardBorder}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}>
-                  {isPending ? 'â³ Pending' : passed ? 'âœ“ Passed' : 'âœ• Failed'}
-                </span>
+                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600 }}>
+                  {isPending ? (
+                    <span style={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <AlertTriangle size={13} /> Pending
+                    </span>
+                  ) : passed ? (
+                    <span style={{ color: '#16A34A', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <CheckCircle2 size={13} /> Passed
+                    </span>
+                  ) : (
+                    <span className="pill pill-red" style={{ fontSize: 10.5, padding: '2px 7px' }}>
+                      <XCircle size={12} /> Failed
+                    </span>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -319,20 +293,19 @@ export default function RiskScoreCard({ riskEvaluation, onViewAudit }) {
       {/* 4. Action Recommendation Box */}
       <div style={{
         background: theme.actionBg,
-        border: `1.5px solid ${theme.actionBorder}`,
-        borderRadius: 14,
-        padding: '12px 16px',
+        border: `1px solid ${theme.actionBorder}`,
+        borderRadius: 10,
+        padding: '11px 14px',
         display: 'flex',
         alignItems: 'center',
-        gap: 10,
-        fontSize: 13,
-        fontWeight: 700,
+        gap: 8,
+        fontSize: 12.5,
+        fontWeight: 600,
         color: theme.actionColor
       }}>
-        <span style={{ fontSize: 16 }}>ðŸ“‹</span>
+        <ClipboardList size={16} style={{ flexShrink: 0 }} />
         <span>{theme.action}</span>
       </div>
     </div>
   );
 }
-

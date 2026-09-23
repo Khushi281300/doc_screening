@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { FileText, Check, Copy } from 'lucide-react';
 
 export default function ForensicDossierCard({ dossierText, outcome }) {
   const [copied, setCopied] = useState(false);
@@ -32,13 +33,24 @@ export default function ForensicDossierCard({ dossierText, outcome }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '24px' }}>ðŸ“‹</span>
+          <div style={{
+            width: 38,
+            height: 38,
+            borderRadius: 8,
+            background: '#F0FDFA',
+            border: '1px solid #CCFBF1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <FileText size={20} color="#0D9488" />
+          </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#1E293B' }}>
+            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800', color: '#0F172A' }}>
               Forensic Intelligence Briefing
             </h3>
             <p style={{ margin: 0, fontSize: '12px', color: '#64748B' }}>
-              Courtroom-ready natural language analysis â€¢ DPDP & ICAO compliant
+              Courtroom-ready natural language analysis • DPDP &amp; ICAO compliant
             </p>
           </div>
         </div>
@@ -57,10 +69,21 @@ export default function ForensicDossierCard({ dossierText, outcome }) {
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              transition: 'all 0.15s ease'
             }}
           >
-            {copied ? 'âœ“ Copied to Clipboard' : 'ðŸ“‹ Copy Briefing'}
+            {copied ? (
+              <>
+                <Check size={14} />
+                <span>Copied to Clipboard</span>
+              </>
+            ) : (
+              <>
+                <Copy size={14} />
+                <span>Copy Briefing</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -72,14 +95,13 @@ export default function ForensicDossierCard({ dossierText, outcome }) {
         borderRadius: '12px',
         padding: '18px 20px',
         color: '#334155',
-        fontSize: '14px',
+        fontSize: '13.5px',
         lineHeight: 1.65,
         whiteSpace: 'pre-wrap',
-        fontFamily: 'monospace'
+        fontFamily: "'JetBrains Mono', monospace"
       }}>
         {dossierText}
       </div>
     </div>
   );
 }
-

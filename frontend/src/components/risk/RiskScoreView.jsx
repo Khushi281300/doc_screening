@@ -6,9 +6,7 @@ import {
   CheckCircle2,
   XCircle,
   FileText,
-  ArrowRight,
-  ClipboardList,
-  UserCheck
+  ClipboardList
 } from 'lucide-react';
 import EmptyStationState from '../layout/EmptyStationState';
 import ExplainabilityChecklist from './ExplainabilityChecklist';
@@ -42,6 +40,32 @@ export default function RiskScoreView({
 
   const isPass = outcome === 'VERIFIED';
   const isReview = outcome === 'MANUAL_REVIEW';
+
+  const verdictTheme = isPass ? {
+    bg: '#F0FDF4',
+    border: '#BBF7D0',
+    titleColor: '#166534',
+    iconBg: '#16A34A',
+    icon: <CheckCircle2 size={24} color="#FFFFFF" />,
+    label: 'PASSED — GENUINE DOCUMENT',
+    desc: 'All security checks passed. No digital tampering or identity discrepancies detected.'
+  } : isReview ? {
+    bg: '#FFFBEB',
+    border: '#FDE68A',
+    titleColor: '#92400E',
+    iconBg: '#D97706',
+    icon: <AlertTriangle size={24} color="#FFFFFF" />,
+    label: 'NEEDS MANUAL OFFICER REVIEW',
+    desc: 'One or more checks require physical inspection by a border officer.'
+  } : {
+    bg: '#FEF2F2',
+    border: '#FECACA',
+    titleColor: '#991B1B',
+    iconBg: '#DC2626',
+    icon: <XCircle size={24} color="#FFFFFF" />,
+    label: 'REJECTED — FORGERY OR ALERT DETECTED',
+    desc: 'Critical security failure detected. Document does not pass border clearance standards.'
+  };
 
   const factorList = [
     {
@@ -77,20 +101,15 @@ export default function RiskScoreView({
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Top Page Header Box */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {/* Top Page Header */}
       <div className="page-header-box">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-              Risk Assessment &amp; Inspection Verdict
-            </h1>
-            <span className={isPass ? 'pill pill-green' : isReview ? 'pill pill-amber' : 'pill pill-red'}>
-              {isPass ? 'PASSED — GENUINE' : isReview ? 'NEEDS MANUAL REVIEW' : 'REJECTED — TAMPERED'}
-            </span>
-          </div>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', margin: '0 0 4px 0' }}>
+            Risk Assessment &amp; Inspection Verdict
+          </h1>
           <p style={{ fontSize: '12.5px', color: '#64748B', margin: 0 }}>
-            Comprehensive evaluation across all five security pillars for Document #{scanResult.document_fields?.document_number || 'P74209188'}
+            Comprehensive evaluation across all five security pillars for Document #{scanResult.document_fields?.document_number || 'N/A'}
           </p>
         </div>
 
@@ -110,8 +129,56 @@ export default function RiskScoreView({
         </div>
       </div>
 
+      {/* Prominent Full-Width Verdict Banner */}
+      <div style={{
+        background: verdictTheme.bg,
+        border: `1.5px solid ${verdictTheme.border}`,
+        borderRadius: 12,
+        padding: '16px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 14
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            borderRadius: 10,
+            background: verdictTheme.iconBg,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            {verdictTheme.icon}
+          </div>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: verdictTheme.titleColor }}>
+              {verdictTheme.label}
+            </div>
+            <div style={{ fontSize: 12.5, color: '#475569', marginTop: 2 }}>
+              {verdictTheme.desc}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            AI Confidence
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', fontFamily: '"JetBrains Mono", monospace' }}>
+            {confidence}%
+          </div>
+          <div style={{ fontSize: 10.5, color: '#64748B' }}>
+            Certainty in evaluation
+          </div>
+        </div>
+      </div>
+
       {/* Main Grid: Left KPI Score + Right Factor Breakdown */}
-      <div className="grid-responsive-2col" style={{ gap: 20 }}>
+      <div className="grid-responsive-2col" style={{ gap: 18 }}>
         {/* Card 1: Score & Recommended Action */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="od-card-header">
@@ -127,18 +194,18 @@ export default function RiskScoreView({
                 Overall Authenticity Score
               </span>
             </div>
-            <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>
-              AI Confidence: {confidence}%
+            <span style={{ fontSize: '11px', color: '#64748B' }}>
+              Minimum passing: 80/100
             </span>
           </div>
 
-          <div className="od-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div className="od-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Big Score Gauge */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '18px 22px',
+              padding: '16px 20px',
               borderRadius: 8,
               background: isPass ? '#F0FDF4' : isReview ? '#FFFBEB' : '#FEF2F2',
               border: `1px solid ${isPass ? '#BBF7D0' : isReview ? '#FDE68A' : '#FECACA'}`
@@ -147,17 +214,17 @@ export default function RiskScoreView({
                 <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: isPass ? '#166534' : isReview ? '#92400E' : '#991B1B' }}>
                   Safety Rating
                 </div>
-                <div style={{ fontSize: '38px', fontWeight: 800, color: isPass ? '#15803D' : isReview ? '#B45309' : '#DC2626', lineHeight: 1.1 }}>
-                  {overallScore}<span style={{ fontSize: '18px', fontWeight: 600, color: '#64748B' }}>/100</span>
+                <div style={{ fontSize: '36px', fontWeight: 800, color: isPass ? '#15803D' : isReview ? '#B45309' : '#DC2626', lineHeight: 1.1 }}>
+                  {overallScore}<span style={{ fontSize: '16px', fontWeight: 600, color: '#64748B' }}>/100</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#475569', marginTop: 4 }}>
-                  {isPass ? 'All 5 security categories verified genuine.' : 'One or more security checks failed.'}
+                  Scores above 80 are considered genuine documents
                 </div>
               </div>
 
               <div style={{
-                width: 58,
-                height: 58,
+                width: 52,
+                height: 52,
                 borderRadius: 10,
                 background: isPass ? '#DCFCE7' : isReview ? '#FEF3C7' : '#FEE2E2',
                 display: 'flex',
@@ -165,11 +232,11 @@ export default function RiskScoreView({
                 justifyContent: 'center'
               }}>
                 {isPass ? (
-                  <CheckCircle2 size={32} color="#16A34A" />
+                  <CheckCircle2 size={28} color="#16A34A" />
                 ) : isReview ? (
-                  <AlertTriangle size={32} color="#D97706" />
+                  <AlertTriangle size={28} color="#D97706" />
                 ) : (
-                  <XCircle size={32} color="#DC2626" />
+                  <XCircle size={28} color="#DC2626" />
                 )}
               </div>
             </div>
@@ -179,15 +246,15 @@ export default function RiskScoreView({
               background: '#FFFFFF',
               border: '1px solid #E2E8F0',
               borderRadius: 8,
-              padding: '14px 16px',
+              padding: '12px 14px',
               display: 'flex',
               flexDirection: 'column',
-              gap: 6
+              gap: 4
             }}>
               <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748B' }}>
                 Officer Guidance
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A', lineHeight: 1.45 }}>
                 {recommendation}
               </div>
             </div>
@@ -198,12 +265,12 @@ export default function RiskScoreView({
                 background: '#FEF2F2',
                 border: '1px solid #FECACA',
                 borderRadius: 8,
-                padding: '12px 16px'
+                padding: '12px 14px'
               }}>
                 <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#991B1B', marginBottom: 6 }}>
                   Critical Findings:
                 </div>
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: '12px', color: '#B91C1C', lineHeight: 1.5 }}>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: '12px', color: '#B91C1C', lineHeight: 1.45 }}>
                   {criticals.map((cf, idx) => (
                     <li key={idx}>{cf}</li>
                   ))}
@@ -224,7 +291,7 @@ export default function RiskScoreView({
             </span>
           </div>
 
-          <div className="od-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="od-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {factorList.map(item => {
               const pass = item.data?.status === 'PASS';
               const score = item.data?.score ?? 90;
@@ -235,10 +302,10 @@ export default function RiskScoreView({
                     background: '#F8FAFC',
                     border: '1px solid #E2E8F0',
                     borderRadius: 6,
-                    padding: '11px 14px'
+                    padding: '10px 12px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#0F172A' }}>
                       {item.label}
                     </span>
@@ -247,15 +314,15 @@ export default function RiskScoreView({
                       alignItems: 'center',
                       gap: 4,
                       fontSize: '11px',
-                      fontWeight: 700,
+                      fontWeight: 600,
                       color: pass ? '#16A34A' : '#DC2626'
                     }}>
-                      {pass ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                      {pass ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                       {pass ? 'Passed' : 'Failed'} ({score}%)
                     </span>
                   </div>
 
-                  <p style={{ fontSize: '11.5px', color: '#64748B', margin: '0 0 8px 0', lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '11px', color: '#64748B', margin: '0 0 6px 0', lineHeight: 1.35 }}>
                     {item.desc}
                   </p>
 
@@ -268,6 +335,9 @@ export default function RiskScoreView({
                       borderRadius: 999
                     }} />
                   </div>
+                  <div style={{ fontSize: '9.5px', color: '#94A3B8', marginTop: 3 }}>
+                    Minimum acceptable: 70%
+                  </div>
                 </div>
               );
             })}
@@ -277,9 +347,8 @@ export default function RiskScoreView({
 
       {/* Explainability Breakdown */}
       <ExplainabilityChecklist
-        riskEvaluation={scanResult.risk_evaluation}
-        biometrics={scanResult.biometrics}
-        documentFields={scanResult.document_fields}
+        factorBreakdown={evaluation.factor_breakdown}
+        riskEvaluation={evaluation}
       />
     </div>
   );

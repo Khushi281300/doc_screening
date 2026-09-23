@@ -216,6 +216,24 @@ export default function ForensicViewerPane({
                 {flagged ? 'Anomaly Detected' : 'Normal / Passed'}
               </span>
             </div>
+            {activeImage === originalImage && !flagged && (
+              <div style={{
+                background: '#F0FDF4',
+                border: '1px solid #BBF7D0',
+                borderRadius: 6,
+                padding: '7px 10px',
+                marginBottom: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: '11px',
+                color: '#166534',
+                fontWeight: 600
+              }}>
+                <CheckCircle2 size={14} color="#16A34A" style={{ flexShrink: 0 }} />
+                <span>No visual differences detected — image appears unaltered under this filter</span>
+              </div>
+            )}
             <div style={{
               background: '#0F172A',
               borderRadius: 6,

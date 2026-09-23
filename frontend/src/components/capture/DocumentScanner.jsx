@@ -17,7 +17,10 @@ import {
   FileCode2,
   Microscope,
   Users,
-  AlertTriangle
+  AlertTriangle,
+  FlaskConical,
+  ChevronDown,
+  X
 } from 'lucide-react';
 import { PRESET_SCENARIOS } from '../../data/presetSamples';
 import CuteSelfieStudio from './CuteSelfieStudio';
@@ -51,6 +54,7 @@ export default function DocumentScanner({
   const [step, setStep]                 = useState(0);
   const [showMetaBox, setShowMetaBox]     = useState(true);
   const [showLivenessModal, setShowLivenessModal] = useState(false);
+  const [showTestingTools, setShowTestingTools]   = useState(false);
 
   useEffect(() => {
     if (!loading) return;
@@ -154,35 +158,71 @@ export default function DocumentScanner({
           )}
         </div>
 
-        {/* Quick Scenario Preset Pills (Stripe Style) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
-            Test Scenarios:
-          </span>
-          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            {PRESET_SCENARIOS.map((scenario) => {
-              const active = currentScenario?.id === scenario.id;
-              return (
-                <button
-                  key={scenario.id}
-                  onClick={() => {
-                    playPop();
-                    onDocumentChange(scenario.documentImage, scenario);
-                    if (onLiveFaceChange) onLiveFaceChange(scenario.liveFace);
-                  }}
-                  className={active ? 'btn btn-primary' : 'btn btn-secondary'}
-                  style={{
-                    padding: '4px 11px',
-                    fontSize: '11.5px',
-                    borderRadius: 6
-                  }}
-                >
-                  {scenario.title.split('(')[0].trim()}
-                </button>
-              );
-            })}
+      </div>
+
+      {/* Testing Tools Panel — collapsed by default */}
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={() => setShowTestingTools(v => !v)}
+          className="btn btn-secondary"
+          title="Open test scenario loader (for demonstration only)"
+          style={{ fontSize: '11px', padding: '5px 10px', color: '#64748B', border: '1px solid #E2E8F0', gap: 5 }}
+        >
+          <FlaskConical size={13} />
+          <span>Testing Tools</span>
+          <ChevronDown size={12} style={{ transform: showTestingTools ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        </button>
+
+        {showTestingTools && (
+          <div style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            left: 0,
+            zIndex: 200,
+            background: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            borderRadius: 8,
+            padding: '14px 16px',
+            minWidth: 320,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+              <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#0F172A' }}>Load a Test Scenario</span>
+              <button
+                onClick={() => setShowTestingTools(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: '#64748B' }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <p style={{ fontSize: '11px', color: '#64748B', margin: 0 }}>
+              These are pre-loaded demonstration cases for testing purposes only. Not visible to travelers.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {PRESET_SCENARIOS.map((scenario) => {
+                const active = currentScenario?.id === scenario.id;
+                return (
+                  <button
+                    key={scenario.id}
+                    onClick={() => {
+                      playPop();
+                      onDocumentChange(scenario.documentImage, scenario);
+                      if (onLiveFaceChange) onLiveFaceChange(scenario.liveFace);
+                      setShowTestingTools(false);
+                    }}
+                    className={active ? 'btn btn-primary' : 'btn btn-secondary'}
+                    style={{ padding: '4px 10px', fontSize: '11px', borderRadius: 6 }}
+                  >
+                    {scenario.title.split('(')[0].trim()}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Main Wide 2-Column Workstation Grid */}
@@ -455,7 +495,7 @@ export default function DocumentScanner({
                 borderColor: isBlacklisted ? '#FECACA' : '#BBF7D0'
               }}
             >
-              {isBlacklisted ? 'Clear Alert' : 'Simulate Police Alert'}
+              {isBlacklisted ? 'Clear Test Alert' : 'Simulate Alert (Test Only)'}
             </button>
           </div>
 

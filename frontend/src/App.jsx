@@ -22,7 +22,7 @@ import ForensicDossierCard from './components/dossier/ForensicDossierCard';
 import HITLReviewPanel from './components/hitl/HITLReviewPanel';
 import OfficerCopilotModal from './components/hitl/OfficerCopilotModal';
 import { playPop, playSuccessFanfare } from './utils/soundEffects';
-import { ShieldAlert, Bot } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 
@@ -66,11 +66,11 @@ function MainDashboard() {
   const [copilotOpen, setCopilotOpen] = useState(false);
 
   const [customMetadata, setCustomMetadata] = useState({
-    fullName: 'UZUMAKI NARUTO',
-    documentNumber: 'P74209188',
-    country: 'JPN',
-    expiryDate: '2032-12-31',
-    dob: '1990-10-10',
+    fullName: '',
+    documentNumber: '',
+    country: '',
+    expiryDate: '',
+    dob: '',
     sex: 'M'
   });
 
@@ -92,8 +92,8 @@ function MainDashboard() {
   }, []);
 
   // Determine if active document is blacklisted
-  const activeDocNum = (customMetadata.documentNumber || 'P74209188').toUpperCase();
-  const activeName   = (customMetadata.fullName || 'UZUMAKI NARUTO').toUpperCase();
+  const activeDocNum = (customMetadata.documentNumber || result?.document_fields?.document_number || '').toUpperCase();
+  const activeName   = (customMetadata.fullName || result?.document_fields?.full_name || '').toUpperCase();
   const isCurrentDocBlacklisted = Boolean(
     watchlist.find(item =>
       item.document_number?.toUpperCase() === activeDocNum ||
@@ -172,9 +172,9 @@ function MainDashboard() {
     // Dynamic MRZ lines determination
     let mrzLinesToSend = currentScenario?.mrzLines;
     if (!mrzLinesToSend) {
-      const parts = (customMetadata.fullName || 'UZUMAKI NARUTO').trim().split(' ');
-      const surname = parts[0] || 'UZUMAKI';
-      const given = parts.slice(1).join(' ') || 'NARUTO';
+      const parts = (customMetadata.fullName || '').trim().split(' ');
+      const surname = parts[0] || 'TRAVELER';
+      const given = parts.slice(1).join(' ') || 'UNKNOWN';
       const expYYMMDD = (customMetadata.expiryDate || '2032-12-31').replace(/[^0-9]/g, '').slice(2, 8);
       const dobYYMMDD = (customMetadata.dob || '1990-10-10').replace(/[^0-9]/g, '').slice(2, 8);
 
@@ -224,27 +224,35 @@ function MainDashboard() {
           document_fields: { format: 'TD3', full_name: 'ERIKSSON ANNA MARIA', document_number: 'L898902C3', expiry_date: '2038-12-31', all_check_digits_valid: true, raw_mrz: currentScenario.mrzLines },
           forensics_metrics: { ela: { is_spliced: true }, exif: { software_tag: 'Adobe Photoshop CC 2024' } },
           biometrics: { verdict: 'MATCH', similarity_percentage: 92, cosine_similarity: 0.920, liveness_score: 96, is_live: true, spoof_classification: 'REAL_HUMAN' },
-          layers: { ela_heatmap_base64: documentImage }
+          layers: { 
+            ...(currentScenario?.forensicLayers || {}),
+            original_rectified_base64: documentImage,
+            doc_face_crop_base64: documentImage
+          }
         });
       } else if (id === 'fake_mrz_checksum') {
         setResult({
           status: 'SUCCESS',
-          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 28, confidence_score: 99, recommendation: 'Document rejected. Security checksums at bottom mathematically fail ICAO standards.', critical_failures: ['Security checksum does not match â€” document data has been altered.'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 0, status: 'FAIL' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 94, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
+          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 28, confidence_score: 99, recommendation: 'Document rejected. Security checksums at bottom mathematically fail ICAO standards.', critical_failures: ['Security checksum does not match — document data has been altered.'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 0, status: 'FAIL' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 94, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
           document_fields: { format: 'TD3', full_name: 'DAVIS JONATHAN', document_number: 'P99441100', all_check_digits_valid: false, check_digits: { document_number: { expected: '9', calculated: '0', valid: false }, composite: { expected: '99', calculated: '10', valid: false } }, raw_mrz: currentScenario.mrzLines },
           layers: { ela_heatmap_base64: documentImage }
         });
       } else if (id === 'screen_recapture_moire') {
         setResult({
           status: 'SUCCESS',
-          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 38, confidence_score: 96, recommendation: 'Document rejected. Screen recapture detected â€” photo of a digital monitor.', critical_failures: ['Screen recapture detected â€” high-frequency pixel grid found (Moire raster).'], warning_flags: [], factor_breakdown: { document_quality: { score: 75, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 40, status: 'FAIL' }, biometric_verification: { score: 90, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
+          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 38, confidence_score: 96, recommendation: 'Document rejected. Screen recapture detected — photo of a digital monitor.', critical_failures: ['Screen recapture detected — high-frequency pixel grid found (Moiré raster).'], warning_flags: [], factor_breakdown: { document_quality: { score: 75, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 40, status: 'FAIL' }, biometric_verification: { score: 90, status: 'PASS' }, database_watchlist: { score: 100, status: 'PASS' } } },
           document_fields: { format: 'TD3', full_name: 'MILLER SARAH', document_number: 'L55221199', all_check_digits_valid: true, raw_mrz: currentScenario.mrzLines },
           forensics_metrics: { recapture: { is_screen_recaptured: true } },
-          layers: { fft_moire_base64: documentImage, ela_heatmap_base64: documentImage }
+          layers: { 
+            ...(currentScenario?.forensicLayers || {}),
+            original_rectified_base64: documentImage,
+            doc_face_crop_base64: documentImage
+          }
         });
       } else if (id === 'biometric_impersonator') {
         setResult({
           status: 'SUCCESS',
-          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 35, confidence_score: 98.4, recommendation: 'Document rejected. The person at the checkpoint does not match the passport portrait.', critical_failures: ['Face does not match the passport photo (similarity: 41% â€” minimum required: 65%).'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 41, status: 'FAIL' }, database_watchlist: { score: 100, status: 'PASS' } } },
+          risk_evaluation: { outcome: 'REJECTED', overall_risk_score: 35, confidence_score: 98.4, recommendation: 'Document rejected. The person at the checkpoint does not match the passport portrait.', critical_failures: ['Face does not match the passport photo (similarity: 41% — minimum required: 65%).'], warning_flags: [], factor_breakdown: { document_quality: { score: 92, status: 'PASS' }, mrz_integrity: { score: 100, status: 'PASS' }, forensic_integrity: { score: 95, status: 'PASS' }, biometric_verification: { score: 41, status: 'FAIL' }, database_watchlist: { score: 100, status: 'PASS' } } },
           document_fields: { format: 'TD3', full_name: 'ZHAO WEI', document_number: 'E44332211', all_check_digits_valid: true, raw_mrz: currentScenario.mrzLines },
           biometrics: { verdict: 'MISMATCH', similarity_percentage: 41.2, cosine_similarity: 0.412, liveness_score: 94, is_live: true, spoof_classification: 'REAL_HUMAN' },
           layers: { ela_heatmap_base64: documentImage }
@@ -325,7 +333,7 @@ function MainDashboard() {
 
   return (
     <div className="dashboard-root">
-      <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} onOpenCopilot={() => setCopilotOpen(true)} />
 
       <div className="dashboard-main-area">
         <Navbar engineMode={engineMode} activeTab={activeTab} />
@@ -465,6 +473,8 @@ function MainDashboard() {
               liveFaceImage={liveFaceImage}
               biometricResult={result?.biometrics}
               onLiveFaceCaptured={b64 => setLiveFaceImage(b64)}
+              onGoToScanner={() => setActiveTab('scanner')}
+              onSelectSample={handleSelectScenarioPreset}
             />
           )}
 
@@ -497,47 +507,6 @@ function MainDashboard() {
         <Footer engineMode={engineMode} />
       </div>
 
-      {/* AI Assistant Launcher Button */}
-      <button
-        onClick={() => {
-          playPop();
-          setCopilotOpen(true);
-        }}
-        title="Open Border Officer AI Assistant"
-        style={{
-          position: 'fixed',
-          bottom: '50px',
-          right: '24px',
-          background: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
-          color: '#FFFFFF',
-          border: '1px solid #14B8A6',
-          borderRadius: '8px',
-          padding: '9px 16px',
-          fontSize: '12px',
-          fontWeight: '700',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 4px 16px rgba(13,148,136,0.3)',
-          cursor: 'pointer',
-          zIndex: 900,
-          transition: 'all 0.15s ease'
-        }}
-      >
-        <Bot size={15} />
-        <span>Officer AI Assistant</span>
-        <span style={{
-          background: 'rgba(255,255,255,0.2)',
-          color: '#FFFFFF',
-          fontSize: '9.5px',
-          padding: '1px 6px',
-          borderRadius: '4px',
-          fontWeight: '700'
-        }}>
-          Online
-        </span>
-      </button>
-
       <OfficerCopilotModal
         isOpen={copilotOpen}
         onClose={() => setCopilotOpen(false)}
@@ -567,7 +536,7 @@ function ProtectedRoute({ children }) {
           fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
         }}
       >
-        <div style={{ fontSize: '44px', marginBottom: '14px', animation: 'bubbleFloat 2s ease-in-out infinite' }}>ðŸ¾</div>
+        
         <div style={{ fontSize: '15px', fontWeight: 700, color: '#0D9488' }}>
           Checking your details...
         </div>

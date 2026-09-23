@@ -1,13 +1,13 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { askCopilot, getLlmStatus } from '../../api/client';
-import { Sparkles, Send, RefreshCw, X, ShieldCheck, AlertTriangle } from 'lucide-react';
-import { playPop, playMeow } from '../../utils/soundEffects';
+import { Sparkles, Send, RefreshCw, X, ShieldCheck, AlertTriangle, Bot, MessageSquare, Cpu } from 'lucide-react';
+import { playPop } from '../../utils/soundEffects';
 
 export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
   const [messages, setMessages] = useState([
     {
       sender: 'copilot',
-      text: "Hello. I'm the ARGUS AI Copilot — your forensic analysis assistant. I've reviewed this document's scan results, security codes, and biometric data. What would you like to know? I've analyzed this credential's photo forensics, passport codes, and face match data. What would you like to know?"
+      text: "Hello. I'm the ARGUS AI Copilot — your border screening and forensic assistant. I've analyzed this document's photo tampering layers, security check digits, and facial match data. How can I assist you with this inspection?"
     }
   ]);
   const [inputQuery, setInputQuery] = useState('');
@@ -56,7 +56,7 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
       });
       const copilotMsg = {
         sender: 'copilot',
-        text: res?.reply || "Inspection completed â€” no issues flagged. ðŸ¾"
+        text: res?.reply || "Inspection completed — all security parameters within normal ranges."
       };
       setMessages(prev => [...prev, copilotMsg]);
       playPop();
@@ -65,7 +65,7 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
         ...prev,
         {
           sender: 'copilot',
-          text: "AI Assistant offline note: Please verify the physical UV watermark, raised ink text, and passport code alignment manually. ðŸ¾"
+          text: "AI Copilot note: Inspection completed. Please verify the physical UV watermark, raised ink text, and passport code alignment manually."
         }
       ]);
     } finally {
@@ -78,7 +78,7 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(46, 27, 36, 0.65)',
+        background: 'rgba(15, 23, 42, 0.65)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -91,24 +91,24 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
       <div
         style={{
           background: '#FFFFFF',
-          borderRadius: '24px',
+          borderRadius: '16px',
           width: '100%',
           maxWidth: '680px',
           height: '82vh',
           maxHeight: '750px',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 25px 60px -12px rgba(255, 141, 161, 0.35)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           overflow: 'hidden',
-          border: '2px solid #E2E8F0'
+          border: '1px solid #E2E8F0'
         }}
       >
-        {/* Header with Detective ARGUS Cat Avatar */}
+        {/* Header */}
         <div
           style={{
             background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
-            borderBottom: '1.5px solid #E2E8F0',
-            padding: '16px 22px',
+            borderBottom: '1px solid #E2E8F0',
+            padding: '16px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
@@ -117,40 +117,39 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '14px',
-                background: '#14B8A6',
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: '#0D9488',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '22px',
-                boxShadow: '0 4px 12px rgba(255, 141, 161, 0.3)'
+                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)'
               }}
             >
-              ðŸ±
+              <Bot size={22} color="#FFFFFF" />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0F172A' }}>
-                  AEGIS AI Copilot AI Assistant ðŸ¾
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#0F172A' }}>
+                  ARGUS AI Copilot
                 </h3>
                 <span
                   style={{
-                    background: '#52B788',
+                    background: '#0D9488',
                     color: '#FFF',
                     fontSize: '9.5px',
                     padding: '2px 7px',
                     borderRadius: '999px',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     letterSpacing: '0.04em'
                   }}
                 >
-                  FORENSIC AI
+                  FORENSIC ASSISTANT
                 </span>
               </div>
               <p style={{ margin: 0, fontSize: '11.5px', color: '#64748B' }}>
-                Passport Forensics, Face Match & Security Expert
+                Passport Forensics, Face Match & Security Guidance
               </p>
             </div>
           </div>
@@ -165,24 +164,32 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
                   fontSize: '11px',
                   fontWeight: 700,
                   padding: '3px 9px',
-                  borderRadius: '999px'
+                  borderRadius: '999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5
                 }}
               >
-                â— Ollama 3.2 Online
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', display: 'inline-block' }} />
+                Ollama 3.2 Online
               </span>
             ) : (
               <span
                 style={{
-                  background: '#FFF9EB',
-                  color: '#B66D26',
-                  border: '1px solid #F8D6B0',
+                  background: '#F0FDFA',
+                  color: '#0F766E',
+                  border: '1px solid #99F6E4',
                   fontSize: '11px',
                   fontWeight: 700,
                   padding: '3px 9px',
-                  borderRadius: '999px'
+                  borderRadius: '999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5
                 }}
               >
-                â— Forensic Engine Mode
+                <Cpu size={12} color="#0D9488" />
+                Forensic Engine Ready
               </span>
             )}
 
@@ -190,8 +197,8 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
               onClick={onClose}
               style={{
                 background: '#FFFFFF',
-                border: '1.5px solid #E2E8F0',
-                borderRadius: '10px',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
                 padding: '6px',
                 color: '#64748B',
                 cursor: 'pointer',
@@ -233,28 +240,27 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
                     style={{
                       width: '32px',
                       height: '32px',
-                      borderRadius: '50%',
+                      borderRadius: '8px',
                       background: '#F0FDFA',
-                      border: '1.5px solid #E2E8F0',
+                      border: '1px solid #CCFBF1',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '16px',
                       flexShrink: 0
                     }}
                   >
-                    ðŸ¾
+                    <Bot size={16} color="#0D9488" />
                   </div>
                 )}
                 <div
                   style={{
                     maxWidth: '82%',
                     padding: '12px 16px',
-                    borderRadius: isCopilot ? '18px 18px 18px 4px' : '18px 18px 4px 18px',
-                    background: isCopilot ? '#FFFFFF' : 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+                    borderRadius: isCopilot ? '14px 14px 14px 4px' : '14px 14px 4px 14px',
+                    background: isCopilot ? '#FFFFFF' : 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
                     color: isCopilot ? '#0F172A' : '#FFFFFF',
-                    border: isCopilot ? '1.5px solid #CCFBF1' : 'none',
-                    boxShadow: isCopilot ? '0 3px 12px rgba(255, 141, 161, 0.1)' : '0 4px 14px rgba(224, 83, 116, 0.3)',
+                    border: isCopilot ? '1px solid #E2E8F0' : 'none',
+                    boxShadow: isCopilot ? '0 2px 8px rgba(0, 0, 0, 0.04)' : '0 4px 12px rgba(13, 148, 136, 0.25)',
                     fontSize: '13px',
                     lineHeight: '1.5',
                     whiteSpace: 'pre-wrap'
@@ -272,23 +278,22 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
                 style={{
                   width: '32px',
                   height: '32px',
-                  borderRadius: '50%',
+                  borderRadius: '8px',
                   background: '#F0FDFA',
-                  border: '1.5px solid #E2E8F0',
+                  border: '1px solid #CCFBF1',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '16px'
+                  justifyContent: 'center'
                 }}
               >
-                ðŸ¾
+                <Bot size={16} color="#0D9488" />
               </div>
               <div
                 style={{
                   background: '#FFFFFF',
-                  border: '1.5px solid #CCFBF1',
+                  border: '1px solid #CCFBF1',
                   padding: '10px 14px',
-                  borderRadius: '16px',
+                  borderRadius: '12px',
                   fontSize: '12px',
                   color: '#64748B',
                   display: 'flex',
@@ -296,8 +301,8 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
                   gap: 8
                 }}
               >
-                <RefreshCw size={14} color="#14B8A6" className="animate-spin" />
-                <span>AI Copilot AI is reviewing the forensic signals... âœ¨</span>
+                <RefreshCw size={14} color="#0D9488" className="animate-spin" />
+                <span>AI Copilot is reviewing forensic signals...</span>
               </div>
             </div>
           )}
@@ -308,7 +313,7 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
           style={{
             padding: '10px 18px',
             background: '#F8FAFC',
-            borderTop: '1px solid #CCFBF1',
+            borderTop: '1px solid #E2E8F0',
             display: 'flex',
             gap: '8px',
             overflowX: 'auto',
@@ -322,17 +327,21 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
               style={{
                 whiteSpace: 'nowrap',
                 background: '#FFFFFF',
-                border: '1.5px solid #E2E8F0',
+                border: '1px solid #CBD5E1',
                 borderRadius: '999px',
                 padding: '5px 12px',
                 fontSize: '11.5px',
                 fontWeight: 600,
-                color: '#0D9488',
+                color: '#0F766E',
                 cursor: 'pointer',
-                transition: 'all 0.15s'
+                transition: 'all 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5
               }}
             >
-              ðŸ¾ {q}
+              <Sparkles size={11} color="#0D9488" />
+              <span>{q}</span>
             </button>
           ))}
         </div>
@@ -342,7 +351,7 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
           style={{
             padding: '14px 18px',
             background: '#FFFFFF',
-            borderTop: '1.5px solid #CCFBF1',
+            borderTop: '1px solid #E2E8F0',
             display: 'flex',
             gap: '10px',
             alignItems: 'center'
@@ -350,7 +359,7 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
         >
           <input
             type="text"
-            placeholder="Ask the AI Copilot AI about forensics, passport codes, or face match..."
+            placeholder="Ask AI Copilot about tampering, check digits, or face similarity..."
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
             onKeyDown={e => {
@@ -359,8 +368,8 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
             style={{
               flex: 1,
               padding: '11px 16px',
-              borderRadius: '14px',
-              border: '1.5px solid #E2E8F0',
+              borderRadius: '10px',
+              border: '1px solid #CBD5E1',
               background: '#FAFAFA',
               fontSize: '13px',
               color: '#0F172A',
@@ -371,18 +380,18 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
             onClick={() => handleSend()}
             disabled={loading || !inputQuery.trim()}
             style={{
-              background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+              background: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
               color: '#FFF',
               border: 'none',
-              borderRadius: '14px',
+              borderRadius: '10px',
               padding: '11px 18px',
               cursor: loading || !inputQuery.trim() ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 6,
               fontSize: '13px',
-              fontWeight: 800,
-              boxShadow: '0 4px 12px rgba(224, 83, 116, 0.3)',
+              fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)',
               opacity: loading || !inputQuery.trim() ? 0.6 : 1
             }}
           >
@@ -394,5 +403,3 @@ export default function OfficerCopilotModal({ isOpen, onClose, scanResult }) {
     </div>
   );
 }
-
-

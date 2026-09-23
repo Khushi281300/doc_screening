@@ -19,8 +19,8 @@ export function calculateCheckDigit(str) {
 
 export function generateTD3MRZ({
   country = 'JPN',
-  surname = 'UZUMAKI',
-  givenNames = 'NARUTO',
+  surname = 'TRAVELER',
+  givenNames = 'UNKNOWN',
   docNumber = 'P74209188',
   nationality = 'JPN',
   dob = '901010', // YYMMDD
@@ -28,8 +28,8 @@ export function generateTD3MRZ({
   expiry = '301231' // YYMMDD
 }) {
   const cleanCountry = (country || 'JPN').toUpperCase().padEnd(3, '<').slice(0, 3);
-  const cleanSurname = (surname || 'UZUMAKI').toUpperCase().replace(/[^A-Z]/g, '<');
-  const cleanGiven = (givenNames || 'NARUTO').toUpperCase().replace(/[^A-Z]/g, '<');
+  const cleanSurname = (surname || 'TRAVELER').toUpperCase().replace(/[^A-Z]/g, '<');
+  const cleanGiven = (givenNames || 'UNKNOWN').toUpperCase().replace(/[^A-Z]/g, '<');
   const namesStr = `${cleanSurname}<<${cleanGiven}`.padEnd(39, '<').slice(0, 39);
   const line1 = `P<${cleanCountry}${namesStr}`.slice(0, 44);
 

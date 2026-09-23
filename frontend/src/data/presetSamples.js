@@ -12,6 +12,8 @@ export const createSyntheticPassport = (options = {}) => {
     faceVariant = "female_authentic"
   } = options;
 
+  if (typeof document === 'undefined') return '';
+
   const canvas = document.createElement("canvas");
   canvas.width = 600;
   canvas.height = 400;
@@ -98,6 +100,7 @@ export const createSyntheticPassport = (options = {}) => {
   // 4. MRZ Zone at bottom
   ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
   ctx.fillRect(0, 290, 600, 110);
+
   ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
   ctx.beginPath();
   ctx.moveTo(0, 290);
@@ -130,6 +133,7 @@ export const createSyntheticPassport = (options = {}) => {
 };
 
 export const createLiveSelfie = (variant = "authentic") => {
+  if (typeof document === 'undefined') return '';
   const canvas = document.createElement("canvas");
   canvas.width = 240;
   canvas.height = 240;
@@ -160,6 +164,119 @@ export const createLiveSelfie = (variant = "authentic") => {
   return canvas.toDataURL("image/jpeg", 0.95);
 };
 
+// Generates high-impact Error Level Analysis (ELA) heatmap canvas
+export const createSyntheticELAHeatmap = (options = {}) => {
+  if (typeof document === 'undefined') return '';
+  const { tamperedField = null } = options;
+  const canvas = document.createElement("canvas");
+  canvas.width = 600;
+  canvas.height = 400;
+  const ctx = canvas.getContext("2d");
+
+  // Baseline ELA noise background (deep dark violet / indigo)
+  ctx.fillStyle = "#0a071b";
+  ctx.fillRect(0, 0, 600, 400);
+
+  // Low amplitude baseline JPEG compression residuals
+  for (let i = 0; i < 600; i += 8) {
+    for (let j = 0; j < 400; j += 8) {
+      const alpha = Math.random() * 0.12;
+      ctx.fillStyle = `rgba(80, 20, 140, ${alpha})`;
+      ctx.fillRect(i, j, 8, 8);
+    }
+  }
+
+  // Draw faint outline of the passport elements in dark magenta
+  ctx.strokeStyle = "rgba(147, 51, 234, 0.25)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(25, 45, 140, 180); // photo box
+  ctx.strokeRect(0, 290, 600, 110); // MRZ box
+
+  // If a field is tampered, render high-intensity Inferno gradient hot-spot
+  if (tamperedField === 'expiry') {
+    // Expiry date location: x: 345, y: 210
+    const grad = ctx.createRadialGradient(420, 225, 5, 420, 225, 75);
+    grad.addColorStop(0, '#FFFFFF'); // Bright white center
+    grad.addColorStop(0.2, '#FBBF24'); // Yellow ring
+    grad.addColorStop(0.5, '#EF4444'); // Crimson / Red hot zone
+    grad.addColorStop(0.85, '#7C3AED'); // Violet boundary
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(330, 180, 180, 90);
+
+    // Overlay bright ELA text highlight
+    ctx.font = "bold 13px 'JetBrains Mono', monospace";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("HIGH DELTA RESIDUAL [31 DEC 2038]", 325, 175);
+  } else if (tamperedField === 'photo') {
+    const grad = ctx.createRadialGradient(95, 135, 10, 95, 135, 90);
+    grad.addColorStop(0, '#FFFFFF');
+    grad.addColorStop(0.3, '#F59E0B');
+    grad.addColorStop(0.6, '#DC2626');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(20, 40, 150, 190);
+  }
+
+  return canvas.toDataURL("image/jpeg", 0.95);
+};
+
+// Generates 2D FFT Moiré Spectrum canvas
+export const createSyntheticFFTMoire = (options = {}) => {
+  if (typeof document === 'undefined') return '';
+  const { hasMoire = false } = options;
+  const canvas = document.createElement("canvas");
+  canvas.width = 600;
+  canvas.height = 400;
+  const ctx = canvas.getContext("2d");
+
+  // Dark background
+  ctx.fillStyle = "#030712";
+  ctx.fillRect(0, 0, 600, 400);
+
+  // Central DC peak
+  const dcGrad = ctx.createRadialGradient(300, 200, 2, 300, 200, 60);
+  dcGrad.addColorStop(0, '#FFFFFF');
+  dcGrad.addColorStop(0.2, '#38BDF8');
+  dcGrad.addColorStop(0.6, '#0F172A');
+  dcGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = dcGrad;
+  ctx.fillRect(200, 100, 200, 200);
+
+  if (hasMoire) {
+    // Distinct periodic spikes indicating pixel grid recapture
+    ctx.strokeStyle = '#22C55E';
+    ctx.lineWidth = 1.5;
+    for (let r = 80; r <= 160; r += 40) {
+      ctx.beginPath();
+      ctx.arc(300, 200, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // High frequency harmonic peaks
+    const spots = [
+      [220, 200], [380, 200], [300, 120], [300, 280],
+      [240, 140], [360, 140], [240, 260], [360, 260]
+    ];
+    spots.forEach(([x, y]) => {
+      const spGrad = ctx.createRadialGradient(x, y, 1, x, y, 14);
+      spGrad.addColorStop(0, '#FFFFFF');
+      spGrad.addColorStop(0.4, '#4ADE80');
+      spGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = spGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, 14, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.font = "bold 13px 'JetBrains Mono', monospace";
+    ctx.fillStyle = "#4ADE80";
+    ctx.fillText("PEAK HARMONIC RASTER DETECTED (Moiré Grid)", 160, 360);
+  }
+
+  return canvas.toDataURL("image/jpeg", 0.95);
+};
+
 export const PRESET_SCENARIOS = [
   {
     id: "genuine_passport",
@@ -176,7 +293,11 @@ export const PRESET_SCENARIOS = [
     mrzLines: [
       "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<",
       "L898902C36UTO7408122F3004159ZE184226B<<<<<10"
-    ]
+    ],
+    forensicLayers: {
+      ela_heatmap_base64: createSyntheticELAHeatmap({ tamperedField: null }),
+      fft_moire_base64: createSyntheticFFTMoire({ hasMoire: false })
+    }
   },
   {
     id: "tampered_expiry_ela",
@@ -194,7 +315,11 @@ export const PRESET_SCENARIOS = [
     mrzLines: [
       "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<",
       "L898902C36UTO7408122F3004159ZE184226B<<<<<10"
-    ]
+    ],
+    forensicLayers: {
+      ela_heatmap_base64: createSyntheticELAHeatmap({ tamperedField: 'expiry' }),
+      fft_moire_base64: createSyntheticFFTMoire({ hasMoire: false })
+    }
   },
   {
     id: "fake_mrz_checksum",
@@ -210,7 +335,11 @@ export const PRESET_SCENARIOS = [
     mrzLines: [
       "P<UTODAVIS<<JONATHAN<<<<<<<<<<<<<<<<<<<<<<<<",
       "P994411009UTO8001011M2501019ZE184226B<<<<<99"
-    ]
+    ],
+    forensicLayers: {
+      ela_heatmap_base64: createSyntheticELAHeatmap({ tamperedField: null }),
+      fft_moire_base64: createSyntheticFFTMoire({ hasMoire: false })
+    }
   },
   {
     id: "screen_recapture_moire",
@@ -227,7 +356,11 @@ export const PRESET_SCENARIOS = [
     mrzLines: [
       "P<UTOMILLER<<SARAH<<<<<<<<<<<<<<<<<<<<<<<<<<",
       "L552211994UTO8505055F2805059ZE184226B<<<<<10"
-    ]
+    ],
+    forensicLayers: {
+      ela_heatmap_base64: createSyntheticELAHeatmap({ tamperedField: null }),
+      fft_moire_base64: createSyntheticFFTMoire({ hasMoire: true })
+    }
   },
   {
     id: "biometric_impersonator",
@@ -243,7 +376,11 @@ export const PRESET_SCENARIOS = [
     mrzLines: [
       "P<UTOZHAO<<WEI<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",
       "E443322118UTO9002022M2902029ZE184226B<<<<<10"
-    ]
+    ],
+    forensicLayers: {
+      ela_heatmap_base64: createSyntheticELAHeatmap({ tamperedField: null }),
+      fft_moire_base64: createSyntheticFFTMoire({ hasMoire: false })
+    }
   },
   {
     id: "blacklisted_identity",
@@ -259,6 +396,10 @@ export const PRESET_SCENARIOS = [
     mrzLines: [
       "P<UTOREZNIKOV<<VIKTOR<<<<<<<<<<<<<<<<<<<<<<<",
       "X998877661UTO7503033M2603039ZE184226B<<<<<10"
-    ]
+    ],
+    forensicLayers: {
+      ela_heatmap_base64: createSyntheticELAHeatmap({ tamperedField: null }),
+      fft_moire_base64: createSyntheticFFTMoire({ hasMoire: false })
+    }
   }
 ];

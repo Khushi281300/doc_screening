@@ -1,38 +1,51 @@
-﻿import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Camera, 
+  FileText, 
+  Binary, 
+  Microscope, 
+  UserCheck, 
+  Search, 
+  Scale, 
+  ShieldCheck, 
+  Clock, 
+  Cpu, 
+  CheckCircle2 
+} from 'lucide-react';
 
-// Maps technical agent/action names to friendly step titles
-const getFriendlyStepName = (item, idx) => {
+// Maps technical agent/action names to friendly step titles and Lucide icons
+const getFriendlyStepDetails = (item, idx) => {
   const agent = (item.agent || '').toLowerCase();
   const action = (item.action || '').toLowerCase();
   const thought = (item.thought || '').toLowerCase();
 
   if (idx === 0 || agent.includes('ingest') || action.includes('ingest') || thought.includes('quality') || thought.includes('preprocess')) {
-    return { icon: 'ðŸ“·', label: 'Photo & Quality Check', desc: 'Checks the document image is clear, readable, and not distorted.' };
+    return { icon: Camera, label: 'Document Ingestion & Image Quality', desc: 'Preprocesses the frame, validates lighting, resolution, and tilt geometry.' };
   }
   if (agent.includes('ocr') || action.includes('ocr') || thought.includes('ocr') || thought.includes('text')) {
-    return { icon: 'ðŸ“', label: 'Text & Code Scanner', desc: 'Reads all the printed text, names, dates, and numbers from the document.' };
+    return { icon: FileText, label: 'OCR & Visual Field Extraction', desc: 'Parses traveler names, passport numbers, birth dates, and expiration dates.' };
   }
   if (agent.includes('mrz') || action.includes('mrz') || thought.includes('mrz') || thought.includes('checksum') || thought.includes('check digit')) {
-    return { icon: 'ðŸ”¢', label: 'Official Code Math Check', desc: 'Verifies the security codes at the bottom of the passport add up correctly.' };
+    return { icon: Binary, label: 'ICAO Checksum Validation', desc: 'Computes TD3 7-3-1 weight algorithms across all check digits.' };
   }
   if (agent.includes('forensic') || action.includes('ela') || action.includes('forensic') || thought.includes('tamper') || thought.includes('ela')) {
-    return { icon: 'ðŸ”¬', label: 'Photoshop & Edit Detection', desc: 'Scans for signs of digital editing, photo splicing, or altered text using AI forensic tools.' };
+    return { icon: Microscope, label: 'Multi-Spectral Tampering & ELA', desc: 'Executes Error Level Analysis, FFT Moiré, and noise inconsistency scans.' };
   }
   if (agent.includes('biometric') || action.includes('face') || action.includes('liveness') || thought.includes('face') || thought.includes('biometric')) {
-    return { icon: 'ðŸ‘¤', label: 'Face Match & Real Person Test', desc: 'Compares the live face against the passport photo and checks for a real person (not a printout).' };
+    return { icon: UserCheck, label: 'Biometric Face Match & Liveness', desc: 'Extracts deep facial embeddings and validates against live selfie.' };
   }
   if (agent.includes('blacklist') || action.includes('watchlist') || thought.includes('watchlist') || thought.includes('interpol')) {
-    return { icon: 'ðŸ”Ž', label: 'Police & Stolen ID Search', desc: 'Cross-checks the passport against national stolen ID lists, Interpol notices, and travel bans.' };
+    return { icon: Search, label: 'Watchlist & Interpol Screening', desc: 'Cross-checks traveler record against stolen documents and alert registries.' };
   }
   if (agent.includes('risk') || action.includes('risk') || thought.includes('risk') || thought.includes('score')) {
-    return { icon: 'âš–ï¸', label: 'Final Risk Decision', desc: 'Combines all findings and issues a final VERIFIED, REVIEW, or REJECTED decision.' };
+    return { icon: Scale, label: 'Bayesian Risk Synthesis', desc: 'Fuses forensic, mathematical, and biometric scores into final outcome.' };
   }
   if (agent.includes('blockchain') || action.includes('blockchain') || thought.includes('blockchain') || thought.includes('audit')) {
-    return { icon: 'ðŸ”—', label: 'Secure Audit Log', desc: 'Saves the screening result permanently into the tamper-proof blockchain log.' };
+    return { icon: ShieldCheck, label: 'Cryptographic Audit Commitment', desc: 'Generates SHA-256 state seal and stores immutable inspection event.' };
   }
-  // Fallback
-  return { icon: 'ðŸ¾', label: `Step ${idx + 1}`, desc: item.action || 'Processing...' };
+  return { icon: Cpu, label: `Pipeline Stage ${idx + 1}`, desc: item.action || 'Executing automated screening routine...' };
 };
 
 export default function AgentReasoningTerminal({ trace = [] }) {
@@ -44,65 +57,90 @@ export default function AgentReasoningTerminal({ trace = [] }) {
   return (
     <div style={{
       background: '#FFFFFF',
-      borderRadius: '20px',
-      border: '1.5px solid #CCFBF1',
-      boxShadow: '0 8px 28px rgba(255,141,161,0.12)',
+      borderRadius: '16px',
+      border: '1px solid #E2E8F0',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
       overflow: 'hidden',
       fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif"
     }}>
       {/* Header */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 22px',
-        borderBottom: '1.5px solid #CCFBF1',
-        background: 'linear-gradient(135deg, #F0FDFA 0%, #FFECF3 100%)',
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        padding: '16px 20px',
+        borderBottom: '1px solid #E2E8F0',
+        background: 'linear-gradient(135deg, #F8FAFC 0%, #F0FDFA 100%)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            width: 38, height: 38, borderRadius: 12,
-            background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, boxShadow: '0 4px 12px rgba(224,83,116,0.28)',
-          }}>ðŸ¾</div>
+            width: 36, 
+            height: 36, 
+            borderRadius: 8,
+            background: '#0D9488',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            color: '#FFFFFF'
+          }}>
+            <Cpu size={18} />
+          </div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
-              AI Detective Investigation Steps
+              ARGUS Autonomous Reasoning Pipeline
             </div>
-            <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>
-              {trace.length} automated steps performed during this inspection
+            <div style={{ fontSize: 11, color: '#64748B', marginTop: 1 }}>
+              {trace.length} verified micro-decisions executed in this inspection
             </div>
           </div>
           <span style={{
-            fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
-            background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0'
+            fontSize: 11, 
+            fontWeight: 700, 
+            padding: '3px 10px', 
+            borderRadius: 999,
+            background: '#F0FDF4', 
+            color: '#166534', 
+            border: '1px solid #BBF7D0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5
           }}>
-            â— {trace.length} Steps Done
+            <CheckCircle2 size={12} color="#16A34A" />
+            <span>{trace.length} Pipeline Stages Completed</span>
           </span>
         </div>
 
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            background: '#FFFFFF', border: '1.5px solid #CCFBF1',
-            color: '#0F766E', borderRadius: 10, padding: '6px 14px',
-            fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 6,
+            background: '#FFFFFF', 
+            border: '1px solid #CBD5E1',
+            color: '#0F766E', 
+            borderRadius: 8, 
+            padding: '6px 12px',
+            fontSize: 12, 
+            fontWeight: 700, 
+            cursor: 'pointer',
             transition: 'all 0.15s ease'
           }}
           onMouseEnter={e => { e.currentTarget.style.background = '#F0FDFA'; }}
           onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; }}
         >
           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          {isExpanded ? 'Hide Steps' : 'Show Steps'}
+          <span>{isExpanded ? 'Hide Trace' : 'View Trace'}</span>
         </button>
       </div>
 
-      {/* Steps */}
+      {/* Steps List */}
       {isExpanded && (
-        <div style={{ padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {trace.map((item, idx) => {
             const isSelected = activeStep === idx;
-            const step = getFriendlyStepName(item, idx);
+            const step = getFriendlyStepDetails(item, idx);
+            const StepIcon = step.icon;
             const isDone = (item.status || 'COMPLETED').toUpperCase() === 'COMPLETED';
 
             return (
@@ -110,25 +148,23 @@ export default function AgentReasoningTerminal({ trace = [] }) {
                 key={idx}
                 onClick={() => setActiveStep(isSelected ? null : idx)}
                 style={{
-                  background: isSelected
-                    ? 'linear-gradient(135deg, #F0FDFA, #FFEEF4)'
-                    : '#FAFAFA',
-                  border: isSelected ? '1.5px solid #14B8A6' : '1.5px solid #CCFBF1',
-                  borderRadius: 14,
-                  padding: '12px 16px',
+                  background: isSelected ? '#F0FDFA' : '#FAFAFA',
+                  border: isSelected ? '1px solid #14B8A6' : '1px solid #E2E8F0',
+                  borderRadius: 10,
+                  padding: '12px 14px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.15s ease',
                 }}
                 onMouseEnter={e => {
                   if (!isSelected) {
-                    e.currentTarget.style.background = '#FFF8FB';
-                    e.currentTarget.style.borderColor = '#FFB7CC';
+                    e.currentTarget.style.background = '#F8FAFC';
+                    e.currentTarget.style.borderColor = '#CBD5E1';
                   }
                 }}
                 onMouseLeave={e => {
                   if (!isSelected) {
                     e.currentTarget.style.background = '#FAFAFA';
-                    e.currentTarget.style.borderColor = '#CCFBF1';
+                    e.currentTarget.style.borderColor = '#E2E8F0';
                   }
                 }}
               >
@@ -137,57 +173,102 @@ export default function AgentReasoningTerminal({ trace = [] }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {/* Step number badge */}
                     <span style={{
-                      fontSize: 10, fontWeight: 800, background: '#14B8A6', color: '#FFFFFF',
-                      padding: '2px 8px', borderRadius: 6, letterSpacing: '0.04em', whiteSpace: 'nowrap'
+                      fontSize: 10, 
+                      fontWeight: 800, 
+                      background: '#0D9488', 
+                      color: '#FFFFFF',
+                      padding: '2px 7px', 
+                      borderRadius: 4, 
+                      letterSpacing: '0.04em', 
+                      whiteSpace: 'nowrap'
                     }}>
                       Step {item.step || idx + 1}
                     </span>
-                    {/* Icon + Friendly name */}
-                    <span style={{ fontSize: 17 }}>{step.icon}</span>
-                    <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>
+
+                    <div style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 6,
+                      background: '#E6FFFA',
+                      color: '#0D9488',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <StepIcon size={14} />
+                    </div>
+
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
                       {step.label}
                     </span>
                   </div>
+
                   {/* Status pill */}
                   <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999,
+                    fontSize: 11, 
+                    fontWeight: 700, 
+                    padding: '2px 8px', 
+                    borderRadius: 999,
                     background: isDone ? '#F0FDF4' : '#FFFBEB',
-                    color: isDone ? '#15803D' : '#B45309',
+                    color: isDone ? '#166534' : '#B45309',
                     border: `1px solid ${isDone ? '#BBF7D0' : '#FDE68A'}`,
-                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4
                   }}>
-                    {isDone ? 'âœ“ Done' : 'â³ Processing'}
+                    {isDone ? (
+                      <>
+                        <CheckCircle2 size={12} color="#16A34A" />
+                        <span>Complete</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clock size={12} color="#D97706" />
+                        <span>In Progress</span>
+                      </>
+                    )}
                   </span>
                 </div>
 
                 {/* Brief description */}
                 <p style={{
-                  margin: '6px 0 0 0', fontSize: 12, color: '#64748B', lineHeight: 1.45,
-                  paddingLeft: 42,
+                  margin: '6px 0 0 0', 
+                  fontSize: 12, 
+                  color: '#64748B', 
+                  lineHeight: 1.45,
+                  paddingLeft: 34,
                 }}>
                   {step.desc}
                 </p>
 
                 {/* Expanded detail on click */}
                 {isSelected && (
-                  <div style={{ marginTop: 12, paddingLeft: 42, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ marginTop: 10, paddingLeft: 34, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {item.thought && (
                       <div style={{
-                        background: '#FFF8FB', border: '1px solid #E2E8F0', borderRadius: 10,
-                        padding: '8px 12px', fontSize: 12, color: '#334155', lineHeight: 1.5
+                        background: '#FFFFFF', 
+                        border: '1px solid #CCFBF1', 
+                        borderRadius: 6,
+                        padding: '8px 12px', 
+                        fontSize: 12, 
+                        color: '#334155', 
+                        lineHeight: 1.5
                       }}>
-                        <strong style={{ color: '#0F766E' }}>AI Thought: </strong>
+                        <strong style={{ color: '#0F766E' }}>Agent Thought: </strong>
                         {item.thought}
                       </div>
                     )}
-                    {item.observation && (
+                    {item.tool_calls && (
                       <div style={{
-                        background: '#F6FFF9', border: '1px solid #BBF7D0', borderRadius: 10,
-                        padding: '8px 12px', fontSize: 12, color: '#15803D', lineHeight: 1.5,
-                        fontFamily: 'monospace'
+                        background: '#0F172A', 
+                        color: '#38BDF8', 
+                        borderRadius: 6,
+                        padding: '8px 12px', 
+                        fontSize: 11, 
+                        fontFamily: "'JetBrains Mono', monospace", 
+                        overflowX: 'auto'
                       }}>
-                        <strong>Finding: </strong>
-                        {item.observation}
+                        {JSON.stringify(item.tool_calls, null, 2)}
                       </div>
                     )}
                   </div>
@@ -200,4 +281,3 @@ export default function AgentReasoningTerminal({ trace = [] }) {
     </div>
   );
 }
-
