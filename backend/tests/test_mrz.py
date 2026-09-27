@@ -39,4 +39,3 @@ def test_ocr_confusion_correction():
     text_with_errors = "L8989O2C3"  # 'O' instead of '0'
     corrected = correct_ocr_confusions(text_with_errors, expected_type="NUMERIC")
     assert corrected == "L898902C3"
-

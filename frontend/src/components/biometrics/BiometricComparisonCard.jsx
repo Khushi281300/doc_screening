@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Camera, UserCheck, RefreshCw, Scan, CheckCircle2, AlertTriangle,
   ArrowRight, CreditCard
@@ -20,11 +20,17 @@ export default function BiometricComparisonCard({
   const [localMatch, setLocalMatch] = useState(null);
   const [comparing, setComparing] = useState(false);
 
+  // Derived only from the liveFaceImage prop, so it's safe to compute before
+  // any state/effects that depend on it.
+  const hasLiveSelfie = Boolean(liveFaceImage && typeof liveFaceImage === 'string' && liveFaceImage.length > 50);
+
   useEffect(() => {
-    if (biometricResult && biometricResult.verdict !== 'PENDING_CAPTURE') {
+    if (!hasLiveSelfie) {
+      setLocalMatch(null);
+    } else if (biometricResult && biometricResult.has_live_capture) {
       setLocalMatch(biometricResult);
     }
-  }, [biometricResult]);
+  }, [biometricResult, hasLiveSelfie]);
 
   // Show proper empty state when no scan has been run yet
   const hasAnyResult = !!(localMatch || biometricResult);
@@ -43,6 +49,10 @@ export default function BiometricComparisonCard({
   }
 
   const calculateClientFallback = (docB64, liveB64) => {
+    if (!docB64 || !liveB64) {
+      setLocalMatch(null);
+      return;
+    }
     const img1 = new Image();
     const img2 = new Image();
     img1.onload = () => {
@@ -60,32 +70,38 @@ export default function BiometricComparisonCard({
           const d2 = ctx2.getImageData(0, 0, 64, 64).data;
           let diff = 0;
           for (let i = 0; i < d1.length; i += 4) {
-            const lum1 = 0.299 * d1[i] + 0.587 * d1[i + 1] + 0.114 * d1[i + 2];
-            const lum2 = 0.299 * d2[i] + 0.587 * d2[i + 1] + 0.114 * d2[i + 2];
-            diff += Math.abs(lum1 - lum2);
+            const rDiff = Math.abs(d1[i] - d2[i]);
+            const gDiff = Math.abs(d1[i + 1] - d2[i + 1]);
+            const bDiff = Math.abs(d1[i + 2] - d2[i + 2]);
+            diff += (rDiff + gDiff + bDiff) / 3;
           }
           const avgDiff = diff / (64 * 64 * 255);
-          const sim = Math.max(0.86, Math.min(0.97, 1.0 - (avgDiff * 0.25)));
+          // Realistic similarity scaling:
+          // Low difference (< 0.10) -> matching individual (80%+)
+          // Moderate difference (0.10 - 0.20) -> borderline / review (55-75%)
+          // High difference (> 0.20) -> clear impersonator / mismatch (< 50%)
+          const sim = Math.max(0.08, Math.min(0.98, 1.0 - (avgDiff * 3.2)));
           const pctVal = Math.round(sim * 1000) / 10;
-          const isPass = pctVal >= 65;
+          const isPass = pctVal >= 75;
+          const isBorder = !isPass && pctVal >= 58;
           const res = {
-            verdict: isPass ? 'MATCH' : (pctVal >= 48 ? 'BORDERLINE' : 'MISMATCH'),
+            verdict: isPass ? 'MATCH' : (isBorder ? 'BORDERLINE' : 'MISMATCH'),
             similarity_percentage: pctVal,
             cosine_similarity: sim,
-            liveness_score: 96.5,
-            is_live: true,
-            spoof_classification: 'REAL_HUMAN'
+            liveness_score: null,
+            is_live: false,
+            spoof_classification: 'AWAITING_CAPTURE'
           };
           setLocalMatch(res);
           if (isPass) playSuccessFanfare();
         } catch (e) {
           setLocalMatch({
-            verdict: 'MATCH',
-            similarity_percentage: 92.4,
-            cosine_similarity: 0.924,
-            liveness_score: 95.0,
-            is_live: true,
-            spoof_classification: 'REAL_HUMAN'
+            verdict: 'MISMATCH',
+            similarity_percentage: 15.0,
+            cosine_similarity: 0.15,
+            liveness_score: 40.0,
+            is_live: false,
+            spoof_classification: 'UNVERIFIED'
           });
         }
       };
@@ -105,16 +121,18 @@ export default function BiometricComparisonCard({
         live_face_base64: selfieToUse
       });
       if (res?.match) {
+        const pLive = res.passive_liveness;
+        const isLiveFace = Boolean(pLive?.is_live);
         const matchData = {
           verdict: res.match.verdict,
           similarity_percentage: res.match.similarity_percentage,
           cosine_similarity: res.match.cosine_similarity,
-          liveness_score: res.passive_liveness?.liveness_score || 92,
-          is_live: res.passive_liveness?.is_live ?? true,
-          spoof_classification: res.passive_liveness?.spoof_classification || 'REAL_HUMAN'
+          liveness_score: pLive?.liveness_score != null ? pLive.liveness_score : null,
+          is_live: isLiveFace,
+          spoof_classification: pLive?.spoof_classification || (isLiveFace ? 'REAL_HUMAN' : 'SPOOF_DETECTED')
         };
         setLocalMatch(matchData);
-        if (matchData.verdict === 'MATCH') playSuccessFanfare();
+        if (matchData.verdict === 'MATCH' && isLiveFace) playSuccessFanfare();
       } else {
         calculateClientFallback(docFaceCrop, selfieToUse);
       }
@@ -126,15 +144,24 @@ export default function BiometricComparisonCard({
     }
   };
 
+  const prevLiveFace = useRef(liveFaceImage);
+  const prevDocCrop = useRef(docFaceCrop);
+
   useEffect(() => {
-    if (docFaceCrop && liveFaceImage && !localMatch) {
-      handleRunAnalysis(liveFaceImage);
+    if (prevLiveFace.current !== liveFaceImage || prevDocCrop.current !== docFaceCrop) {
+      prevLiveFace.current = liveFaceImage;
+      prevDocCrop.current = docFaceCrop;
+      setLocalMatch(null);
+      if (docFaceCrop && liveFaceImage) {
+        handleRunAnalysis(liveFaceImage);
+      }
     }
   }, [docFaceCrop, liveFaceImage]);
 
-  // Only use real result — never show fake fallback data as if it were a real match
-  const match = localMatch || biometricResult;
-  const hasScore = !!(match && match.similarity_percentage != null && match.verdict !== 'PENDING_CAPTURE');
+  // Only use live biometric result when a live face is actively present
+  const activeBiometricResult = (hasLiveSelfie && biometricResult?.has_live_capture) ? biometricResult : null;
+  const match = hasLiveSelfie ? (localMatch || activeBiometricResult) : null;
+  const hasScore = !comparing && hasLiveSelfie && !!(match && match.has_live_capture !== false && match.similarity_percentage != null && match.verdict !== 'PENDING_CAPTURE' && match.verdict !== 'NOT_PERFORMED');
   const pct = hasScore ? match.similarity_percentage : null;
   const isMatch = match?.verdict === 'MATCH';
   const isBorder = match?.verdict === 'BORDERLINE';
@@ -259,23 +286,34 @@ export default function BiometricComparisonCard({
         {/* Liveness Strip */}
         <div style={{
           padding: '10px 14px', borderRadius: 8,
-          background: !hasScore ? '#F8FAFC' : (match?.is_live ? '#F0FDF4' : '#FEF2F2'),
-          border: `1px solid ${!hasScore ? '#E2E8F0' : (match?.is_live ? '#BBF7D0' : '#FECACA')}`,
+          background: (!hasLiveSelfie || !hasScore) ? '#F8FAFC' : (match?.is_live ? '#F0FDF4' : '#FEF2F2'),
+          border: `1px solid ${(!hasLiveSelfie || !hasScore) ? '#E2E8F0' : (match?.is_live ? '#BBF7D0' : '#FECACA')}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap'
         }}>
-          {!hasScore ? (
+          {!hasLiveSelfie ? (
             <>
-              <span style={{ fontSize: 12, color: '#64748B' }}>
-                <strong>Liveness check:</strong> Waiting for live selfie
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 12, color: '#334155', fontWeight: 600 }}>
+                  <strong>Liveness Check:</strong> Awaiting Live Traveler Selfie
+                </span>
+                <span style={{ fontSize: 10.5, color: '#64748B' }}>
+                  Document photo uploaded. Liveness confidence is only tested during live camera feeds.
+                </span>
+              </div>
               <button
                 className="btn btn-secondary"
-                style={{ fontSize: 11, padding: '4px 10px' }}
+                style={{ fontSize: 11, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5 }}
                 onClick={() => { playPop(); setModal(true); }}
               >
-                <Camera size={12} color="#0D9488" />
-                <span>Take Selfie</span>
+                <Camera size={13} color="#0D9488" />
+                <span>Take Live Selfie</span>
               </button>
+            </>
+          ) : !hasScore ? (
+            <>
+              <span style={{ fontSize: 12, color: '#64748B' }}>
+                <strong>Liveness Check:</strong> Processing live selfie verification...
+              </span>
             </>
           ) : (
             <>
@@ -285,15 +323,24 @@ export default function BiometricComparisonCard({
                   : <AlertTriangle size={14} color="#DC2626" />
                 }
                 <span style={{ fontWeight: 600, color: match?.is_live ? '#166534' : '#991B1B' }}>
-                  {match?.spoof_classification === 'REAL_HUMAN' ? 'Real person confirmed' : 'Screen or print spoof detected'}
+                  {match?.spoof_classification === 'AI_GENERATED_SPOOF'
+                    ? 'AI Generated / Deepfake Spoof Detected'
+                    : match?.spoof_classification === 'SCREEN_REPLAY'
+                    ? 'Screen Replay Recapture Spoof'
+                    : match?.spoof_classification === 'PRINTED_PHOTO'
+                    ? 'Printed Paper Photo Spoof'
+                    : match?.is_live
+                    ? 'Real person confirmed'
+                    : 'Spoof / Synthetic Face Detected'
+                  }
                 </span>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: '"JetBrains Mono", monospace', fontWeight: 800, fontSize: 13, color: match?.is_live ? '#16A34A' : '#DC2626' }}>
-                  {match?.liveness_score || 95}%
+                  {match?.liveness_score != null ? `${Math.round(match.liveness_score)}%` : '—'}
                 </div>
-                <div style={{ fontSize: 10, color: '#64748B' }}>
-                  Liveness confidence — above 85% is genuine
+                <div style={{ fontSize: 10, color: match?.is_live ? '#64748B' : '#DC2626' }}>
+                  {match?.is_live ? 'Liveness confidence — above 85% is genuine' : 'Liveness check FAILED — synthetic spoof'}
                 </div>
               </div>
             </>

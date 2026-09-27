@@ -109,6 +109,7 @@ function MainDashboard() {
       setLiveFaceImage(scenario.liveFace);
     } else {
       setCurrentScenario(null);
+      setLiveFaceImage(null);
     }
   };
 
@@ -169,9 +170,9 @@ function MainDashboard() {
     if (!documentImage) return;
     setLoading(true);
 
-    // Dynamic MRZ lines determination
-    let mrzLinesToSend = currentScenario?.mrzLines;
-    if (!mrzLinesToSend) {
+    // Determine whether to send preset scenario MRZ lines or let backend OCR read real document
+    let mrzLinesToSend = currentScenario?.mrzLines || null;
+    if (!mrzLinesToSend && customMetadata.documentNumber && customMetadata.fullName) {
       const parts = (customMetadata.fullName || '').trim().split(' ');
       const surname = parts[0] || 'TRAVELER';
       const given = parts.slice(1).join(' ') || 'UNKNOWN';
@@ -179,11 +180,11 @@ function MainDashboard() {
       const dobYYMMDD = (customMetadata.dob || '1990-10-10').replace(/[^0-9]/g, '').slice(2, 8);
 
       mrzLinesToSend = generateTD3MRZ({
-        country: customMetadata.country || 'JPN',
+        country: customMetadata.country || 'UTO',
         surname: surname,
         givenNames: given,
-        docNumber: customMetadata.documentNumber || 'P74209188',
-        nationality: customMetadata.country || 'JPN',
+        docNumber: customMetadata.documentNumber,
+        nationality: customMetadata.country || 'UTO',
         expiry: expYYMMDD || '321231',
         dob: dobYYMMDD || '901010',
         sex: customMetadata.sex || 'M'
@@ -193,7 +194,7 @@ function MainDashboard() {
     try {
       const res = await runFullInspection({
         document_image_base64: documentImage,
-        live_face_base64: liveFaceImage,
+        live_face_base64: liveFaceImage || null,
         mrz_lines: mrzLinesToSend,
         officer_id: officer?.badge_id || 'BC-1001',
         checkpoint_id: officer?.checkpoint_id || 'DEL-T3-GATE-4'
@@ -312,12 +313,13 @@ function MainDashboard() {
             raw_mrz: mrzLinesToSend
           },
           biometrics: {
-            verdict: 'MATCH',
-            similarity_percentage: 94.8,
-            cosine_similarity: 0.948,
-            liveness_score: 97,
-            is_live: true,
-            spoof_classification: 'REAL_HUMAN'
+            verdict: (liveFaceImage && liveFaceImage.length > 50) ? 'MATCH' : 'NOT_PERFORMED',
+            similarity_percentage: (liveFaceImage && liveFaceImage.length > 50) ? 94.8 : null,
+            cosine_similarity: (liveFaceImage && liveFaceImage.length > 50) ? 0.948 : null,
+            liveness_score: (liveFaceImage && liveFaceImage.length > 50) ? 97 : null,
+            is_live: (liveFaceImage && liveFaceImage.length > 50) ? true : null,
+            spoof_classification: (liveFaceImage && liveFaceImage.length > 50) ? 'REAL_HUMAN' : 'AWAITING_CAPTURE',
+            has_live_capture: Boolean(liveFaceImage && liveFaceImage.length > 50)
           },
           layers: {
             original_rectified_base64: documentImage,
@@ -359,12 +361,90 @@ function MainDashboard() {
 
               {result && (
                 <div className="slide-up" style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 4 }}>
+                  {/* ARGUS Autonomous Pipeline Trace */}
+                  {result.agent_trace && result.agent_trace.length > 0 && (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                        <span className="pill pill-teal">Pipeline</span>
+                        <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
+                          AI Reasoning Pipeline Trace
+                        </h2>
+                      </div>
+                      <AgentReasoningTerminal trace={result.agent_trace} />
+                    </div>
+                  )}
+
+                  {/* Module Intelligence Summary */}
+                  {(result.document_classification || result.document_validation || result.ml_tamper_fusion || result.biometrics) && (
+                    <div style={{
+                      background: '#FFFFFF', borderRadius: 14, border: '1px solid #E2E8F0',
+                      boxShadow: '0 2px 12px rgba(0,0,0,0.04)', overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        padding: '13px 18px', borderBottom: '1px solid #F1F5F9',
+                        background: 'linear-gradient(135deg,#F8FAFC,#F5F3FF)',
+                        display: 'flex', alignItems: 'center', gap: 10
+                      }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>Module Intelligence Summary</span>
+                        <span style={{ fontSize: 11, color: '#64748B' }}>— outputs from each AI module</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 0 }}>
+                        {/* M1 — Document Classifier */}
+                        {result.document_classification && (
+                          <div style={{ padding: '14px 18px', borderRight: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#6D28D9', letterSpacing: '0.07em', marginBottom: 5 }}>MODULE 1 · CLASSIFIER</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{result.document_classification.document_type || 'PASSPORT'}</div>
+                            <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{result.document_classification.sub_type || ''} · {((result.document_classification.confidence || 0.85) * 100).toFixed(0)}% confidence</div>
+                            <div style={{ fontSize: 10, color: '#7C3AED', marginTop: 3, fontFamily: 'monospace' }}>Pipeline: {result.document_classification.recommended_pipeline || 'passport'}</div>
+                          </div>
+                        )}
+                        {/* M2 — Validation */}
+                        {result.document_validation && (
+                          <div style={{ padding: '14px 18px', borderRight: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#0E7490', letterSpacing: '0.07em', marginBottom: 5 }}>MODULE 2 · VALIDATION</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>Score: {result.document_validation.validation_score?.toFixed(0) ?? '—'}/100</div>
+                            <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                              {(result.document_validation.format_anomalies || []).length === 0 && (result.document_validation.layout_anomalies || []).length === 0
+                                ? 'No format or chronology anomalies'
+                                : `${(result.document_validation.format_anomalies || []).length} format · ${(result.document_validation.layout_anomalies || []).length} layout anomalies`
+                              }
+                            </div>
+                          </div>
+                        )}
+                        {result.ml_tamper_fusion && (
+                          <div style={{ padding: '14px 18px', borderRight: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#92400E', letterSpacing: '0.07em', marginBottom: 5 }}>MODULE 3 · ML FUSION</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: result.ml_tamper_fusion.verdict === 'CLEAN' ? '#166534' : '#B91C1C' }}>{result.ml_tamper_fusion.verdict}</div>
+                            <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>Tamper prob: {((result.ml_tamper_fusion.tamper_probability || 0) * 100).toFixed(1)}%</div>
+                            <div style={{ fontSize: 11, color: '#64748B' }}>Integrity: {result.ml_tamper_fusion.forensic_integrity_score?.toFixed(0) ?? '—'}/100</div>
+                          </div>
+                        )}
+                        {/* M4 — Face + Duplicate */}
+                        {result.biometrics && (
+                          <div style={{ padding: '14px 18px', borderBottom: '1px solid #F1F5F9' }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: '#0F766E', letterSpacing: '0.07em', marginBottom: 5 }}>MODULE 4 · BIOMETRICS</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: result.biometrics.verdict === 'MATCH' ? '#166534' : result.biometrics.verdict === 'NOT_PERFORMED' ? '#64748B' : '#B91C1C' }}>
+                              {result.biometrics.has_live_capture ? result.biometrics.verdict : 'PENDING CAPTURE'}
+                            </div>
+                            {result.biometrics.has_live_capture && (
+                              <>
+                                <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>Similarity: {result.biometrics.similarity_percentage?.toFixed(1) ?? '—'}%</div>
+                                <div style={{ fontSize: 11, color: '#64748B' }}>Liveness: {result.biometrics.liveness_score?.toFixed(0) ?? '—'}/100 · {result.biometrics.spoof_classification}</div>
+                              </>
+                            )}
+                            {!result.biometrics.has_live_capture && (
+                              <div style={{ fontSize: 10, color: '#B45309', marginTop: 3 }}>Provide live selfie to run 1:1 match</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Step 2: Inspection Findings & Verdict */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span className="pill pill-teal">
-                        Step 2
-                      </span>
+                      <span className="pill pill-teal">Verdict</span>
                       <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0F172A' }}>
                         Inspection Findings &amp; Authenticity Summary
                       </h2>

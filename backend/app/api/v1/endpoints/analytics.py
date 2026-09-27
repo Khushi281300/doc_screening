@@ -9,6 +9,7 @@ from ....core.dependencies import get_db, require_admin
 router = APIRouter()
 
 @router.get("/checkpoint/metrics", tags=["Analytics"])
+@router.get("/dashboard", tags=["Analytics"])
 async def get_checkpoint_analytics(
     db: Session = Depends(get_db),
     admin: Officer = Depends(require_admin)

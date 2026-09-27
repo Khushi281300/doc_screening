@@ -49,27 +49,98 @@ export const createSyntheticPassport = (options = {}) => {
   ctx.fillText("TYPE / TYPE: P   |   CODE / CODE: UTO", 190, 60);
 
   // 2. Photo Area
-  ctx.fillStyle = "#1e293b";
+  ctx.fillStyle = "#e8e8e8"; // Light neutral background for photo
   ctx.fillRect(25, 45, 140, 180);
   ctx.strokeStyle = "#06b6d4";
   ctx.lineWidth = 2;
   ctx.strokeRect(25, 45, 140, 180);
 
-  // Draw face avatar
-  ctx.fillStyle = faceVariant === "impersonator" ? "#e2e8f0" : "#cbd5e1";
+  // Draw female face avatar (Anna Eriksson - light skin, oval face)
+  const faceColor = faceVariant === "impersonator" ? "#8B4513" : "#f5cba7";
+  const hairColor = faceVariant === "impersonator" ? "#1a0a00" : "#92400e";
+  
+  // Neck
+  ctx.fillStyle = faceColor;
+  ctx.fillRect(80, 185, 30, 40);
+  
+  // Shoulders
+  ctx.fillStyle = faceVariant === "impersonator" ? "#374151" : "#1e40af";
   ctx.beginPath();
-  ctx.arc(95, 110, 38, 0, Math.PI * 2); // Head
+  ctx.ellipse(95, 225, 65, 35, 0, 0, Math.PI, true);
   ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(95, 185, 55, 40, 0, 0, Math.PI, true); // Shoulders
-  ctx.fill();
-
-  // Draw eyes & glasses
-  ctx.fillStyle = "#0f172a";
-  ctx.beginPath();
-  ctx.arc(82, 105, 4, 0, Math.PI * 2);
-  ctx.arc(108, 105, 4, 0, Math.PI * 2);
-  ctx.fill();
+  
+  if (faceVariant === "impersonator") {
+    // Square-jawed male face
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.moveTo(45, 110);
+    ctx.quadraticCurveTo(45, 75, 95, 70);
+    ctx.quadraticCurveTo(145, 75, 145, 110);
+    ctx.lineTo(140, 170);
+    ctx.quadraticCurveTo(120, 190, 95, 190);
+    ctx.quadraticCurveTo(70, 190, 50, 170);
+    ctx.closePath();
+    ctx.fill();
+    // Short dark hair
+    ctx.fillStyle = hairColor;
+    ctx.beginPath();
+    ctx.ellipse(95, 78, 52, 30, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.ellipse(95, 95, 47, 22, 0, 0, Math.PI);
+    ctx.fill();
+    // Thick brows
+    ctx.fillStyle = "#1a0a00";
+    ctx.fillRect(63, 110, 22, 5);
+    ctx.fillRect(110, 110, 22, 5);
+    // Brown eyes
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.ellipse(75, 122, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(115, 122, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#5c3317";
+    ctx.beginPath(); ctx.arc(75, 122, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(115, 122, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.arc(75, 122, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(115, 122, 2.5, 0, Math.PI * 2); ctx.fill();
+  } else {
+    // Oval feminine face
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.ellipse(95, 135, 50, 62, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Long brown hair
+    ctx.fillStyle = hairColor;
+    ctx.beginPath();
+    ctx.ellipse(95, 95, 56, 48, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(55, 140, 15, 40, -0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(135, 140, 15, 40, 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.ellipse(95, 140, 43, 55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Arched brows
+    ctx.strokeStyle = "#7c3aed";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(75, 112, 11, Math.PI + 0.3, Math.PI * 2 - 0.3); ctx.stroke();
+    ctx.beginPath(); ctx.arc(115, 112, 11, Math.PI + 0.3, Math.PI * 2 - 0.3); ctx.stroke();
+    // Blue eyes
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.ellipse(75, 120, 10, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(115, 120, 10, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#1e40af";
+    ctx.beginPath(); ctx.arc(75, 120, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(115, 120, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.arc(75, 120, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(115, 120, 2, 0, Math.PI * 2); ctx.fill();
+    // Smile
+    ctx.strokeStyle = "#b45309";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(95, 163, 13, 0.1, Math.PI - 0.1); ctx.stroke();
+  }
 
   // 3. Document Printed Fields
   const drawField = (label, value, x, y, isTampered = false) => {
@@ -112,7 +183,7 @@ export const createSyntheticPassport = (options = {}) => {
 
   // Generate MRZ line 1 & 2
   const mrz1 = `P<UTO${name.replace(/\s+/g, "<").padEnd(39, "<")}`.slice(0, 44);
-  const mrz2 = `${docNumber.padEnd(9, "<")}6UTO7408122F3004159ZE184226B<<<<<10`.slice(0, 44);
+  const mrz2 = `${docNumber.padEnd(9, "<")}6UTO7408122F3004157ZE184226B<<<<<<5`.slice(0, 44);
 
   ctx.fillText(mrz1, 25, 335);
   ctx.fillText(mrz2, 25, 375);
@@ -135,34 +206,194 @@ export const createSyntheticPassport = (options = {}) => {
 export const createLiveSelfie = (variant = "authentic") => {
   if (typeof document === 'undefined') return '';
   const canvas = document.createElement("canvas");
-  canvas.width = 240;
-  canvas.height = 240;
+  canvas.width = 320;
+  canvas.height = 320;
   const ctx = canvas.getContext("2d");
 
-  // Background
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(0, 0, 240, 240);
+  if (variant === "authentic") {
+    // Female face matching the passport (Anna Eriksson) - oval face, lighter skin, similar to passport photo
+    // Background - neutral light gray studio backdrop
+    ctx.fillStyle = "#d1d5db";
+    ctx.fillRect(0, 0, 320, 320);
 
-  // Head
-  ctx.fillStyle = variant === "impersonator" ? "#fbbf24" : "#cbd5e1";
-  ctx.beginPath();
-  ctx.arc(120, 100, 50, 0, Math.PI * 2);
-  ctx.fill();
+    // Neck
+    ctx.fillStyle = "#f5cba7";
+    ctx.fillRect(135, 200, 50, 80);
 
-  // Shoulders
-  ctx.beginPath();
-  ctx.ellipse(120, 200, 70, 50, 0, 0, Math.PI, true);
-  ctx.fill();
+    // Shoulders - feminine cut
+    ctx.fillStyle = "#1e40af"; // blue top
+    ctx.beginPath();
+    ctx.ellipse(160, 310, 110, 55, 0, 0, Math.PI, true);
+    ctx.fill();
 
-  // Eyes
-  ctx.fillStyle = "#020617";
-  ctx.beginPath();
-  ctx.arc(102, 95, 5, 0, Math.PI * 2);
-  ctx.arc(138, 95, 5, 0, Math.PI * 2);
-  ctx.fill();
+    // Face - oval/feminine shape
+    ctx.fillStyle = "#f5cba7";
+    ctx.beginPath();
+    ctx.ellipse(160, 145, 72, 88, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair - light brown, longer
+    ctx.fillStyle = "#92400e";
+    ctx.beginPath();
+    ctx.ellipse(160, 100, 78, 65, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Side hair
+    ctx.beginPath();
+    ctx.ellipse(105, 155, 22, 55, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(215, 155, 22, 55, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Face skin on top of hair
+    ctx.fillStyle = "#f5cba7";
+    ctx.beginPath();
+    ctx.ellipse(160, 155, 62, 80, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyebrows - thin arched
+    ctx.strokeStyle = "#7c3aed";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(133, 127, 14, Math.PI + 0.3, Math.PI * 2 - 0.3); ctx.stroke();
+    ctx.beginPath(); ctx.arc(187, 127, 14, Math.PI + 0.3, Math.PI * 2 - 0.3); ctx.stroke();
+
+    // Eyes - almond shaped, blue
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.ellipse(133, 135, 13, 9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(187, 135, 13, 9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#1e40af"; // Blue iris
+    ctx.beginPath(); ctx.arc(133, 135, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(187, 135, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath(); ctx.arc(133, 135, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(187, 135, 3, 0, Math.PI * 2); ctx.fill();
+    // Eye shine
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.beginPath(); ctx.arc(136, 132, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(190, 132, 2, 0, Math.PI * 2); ctx.fill();
+
+    // Nose - small, feminine
+    ctx.strokeStyle = "#d49b77";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(155, 148); ctx.quadraticCurveTo(148, 168, 152, 172); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(152, 172); ctx.quadraticCurveTo(160, 176, 168, 172); ctx.stroke();
+
+    // Smile - warm smile
+    ctx.strokeStyle = "#b45309";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(160, 185, 18, 0.1, Math.PI - 0.1);
+    ctx.stroke();
+    // Lips
+    ctx.fillStyle = "#e07b8a";
+    ctx.beginPath();
+    ctx.ellipse(160, 186, 16, 7, 0, 0, Math.PI);
+    ctx.fill();
+
+    // Subtle blush
+    ctx.fillStyle = "rgba(255, 150, 150, 0.15)";
+    ctx.beginPath(); ctx.ellipse(108, 158, 20, 12, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(212, 158, 20, 12, 0.3, 0, Math.PI * 2); ctx.fill();
+
+  } else {
+    // IMPERSONATOR - Completely different person: male, darker skin, square jaw, different features
+    // Background - different color
+    ctx.fillStyle = "#fef3c7";
+    ctx.fillRect(0, 0, 320, 320);
+
+    // Neck
+    ctx.fillStyle = "#8B4513";
+    ctx.fillRect(130, 215, 60, 70);
+
+    // Shoulders - masculine
+    ctx.fillStyle = "#374151"; // dark gray suit
+    ctx.beginPath();
+    ctx.ellipse(160, 315, 130, 65, 0, 0, Math.PI, true);
+    ctx.fill();
+
+    // Face - square-ish jaw, masculine
+    ctx.fillStyle = "#8B4513"; // Much darker skin tone
+    ctx.beginPath();
+    ctx.moveTo(90, 140);
+    ctx.quadraticCurveTo(90, 105, 160, 100);
+    ctx.quadraticCurveTo(230, 105, 230, 140);
+    ctx.lineTo(225, 210);
+    ctx.quadraticCurveTo(195, 235, 160, 237);
+    ctx.quadraticCurveTo(125, 235, 95, 210);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hair - very short, dark, receding
+    ctx.fillStyle = "#1a0a00";
+    ctx.beginPath();
+    ctx.ellipse(160, 105, 70, 40, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Receding hairline - leave forehead exposed
+    ctx.fillStyle = "#8B4513";
+    ctx.beginPath();
+    ctx.ellipse(160, 130, 62, 35, 0, 0, Math.PI);
+    ctx.fill();
+
+    // Heavy eyebrows - thick and straight
+    ctx.fillStyle = "#1a0a00";
+    ctx.beginPath();
+    ctx.rect(103, 138, 35, 7);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(182, 138, 35, 7);
+    ctx.fill();
+
+    // Eyes - brown, narrower, hooded
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.ellipse(125, 155, 14, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(195, 155, 14, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#5c3317"; // Brown iris
+    ctx.beginPath(); ctx.arc(125, 155, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(195, 155, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath(); ctx.arc(125, 155, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(195, 155, 4, 0, Math.PI * 2); ctx.fill();
+
+    // Nose - wider, larger
+    ctx.fillStyle = "#7a3b10";
+    ctx.beginPath();
+    ctx.ellipse(160, 182, 12, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#6b3010";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(150, 160); ctx.lineTo(148, 182); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(170, 160); ctx.lineTo(172, 182); ctx.stroke();
+
+    // Mouth - stern expression, thin lips
+    ctx.fillStyle = "#6b2c17";
+    ctx.beginPath();
+    ctx.rect(138, 200, 44, 5);
+    ctx.fill();
+    ctx.strokeStyle = "#6b2c17";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(138, 202);
+    ctx.lineTo(182, 202);
+    ctx.stroke();
+
+    // Beard/stubble
+    ctx.fillStyle = "rgba(26, 10, 0, 0.3)";
+    ctx.beginPath();
+    ctx.ellipse(160, 215, 55, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Label for clarity
+    ctx.fillStyle = "rgba(239, 68, 68, 0.85)";
+    ctx.fillRect(0, 290, 320, 30);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 12px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("IMPERSONATOR — DIFFERENT PERSON", 160, 310);
+  }
 
   return canvas.toDataURL("image/jpeg", 0.95);
 };
+
 
 // Generates high-impact Error Level Analysis (ELA) heatmap canvas
 export const createSyntheticELAHeatmap = (options = {}) => {

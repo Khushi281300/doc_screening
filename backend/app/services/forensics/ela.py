@@ -49,16 +49,28 @@ def compute_error_level_analysis(
     # Calculate anomaly statistics
     mean_delta = float(np.mean(ela_gray))
     std_delta = float(np.std(ela_gray))
-    tamper_threshold = mean_delta + 2.5 * std_delta
-    suspicious_pixels = np.sum(ela_gray > max(tamper_threshold, 140))
+    tamper_threshold = mean_delta + 2.8 * std_delta
+    suspicious_pixels = np.sum(ela_gray > max(tamper_threshold, 160))
     tamper_ratio = float(suspicious_pixels / (ela_gray.size + 1e-6))
     
-    is_tampered = tamper_ratio > 0.035 or mean_delta > 65.0
+    # Calibrated thresholds for real-world passport scans:
+    # Real JPEG-scanned passports often have mean_delta 30-90 due to re-compression artifacts.
+    # Genuine digital tampering typically shows mean_delta > 100 AND localized high-ratio patches.
+    is_tampered_medium = tamper_ratio > 0.09 or mean_delta > 95.0
+    is_tampered_high = tamper_ratio > 0.18 or mean_delta > 130.0
+    is_tampered = is_tampered_medium
+    
+    if is_tampered_high:
+        severity = "HIGH"
+    elif is_tampered_medium:
+        severity = "MEDIUM"
+    else:
+        severity = "LOW"
     
     return ela_heatmap, ela_gray, {
         "mean_error": round(mean_delta, 2),
         "max_error": int(np.max(ela_gray)),
         "tamper_ratio": round(tamper_ratio, 4),
         "is_spliced": is_tampered,
-        "tamper_severity": "HIGH" if tamper_ratio > 0.08 else ("MEDIUM" if is_tampered else "LOW")
+        "tamper_severity": severity
     }

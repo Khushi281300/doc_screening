@@ -35,6 +35,24 @@ def correct_ocr_confusions(text: str, expected_type: str = "ALPHANUMERIC") -> st
         return "".join(mapping.get(c, c) for c in text)
     return text
 
+def _safe_format_dob(dob_raw: str) -> str:
+    """Safely formats raw YYMMDD birth date to standard string without crashing on OCR noise."""
+    num_str = correct_ocr_confusions(dob_raw or '', "NUMERIC")
+    cleaned = re.sub(r'[^0-9]', '0', num_str).ljust(6, '0')[:6]
+    try:
+        yy = int(cleaned[0:2])
+    except (ValueError, TypeError):
+        yy = 90
+    year_prefix = "19" if yy > 30 else "20"
+    return f"{year_prefix}{cleaned[0:2]}-{cleaned[2:4]}-{cleaned[4:6]}"
+
+def _safe_format_expiry(expiry_raw: str) -> str:
+    """Safely formats raw YYMMDD expiry date to standard string without crashing on OCR noise."""
+    num_str = correct_ocr_confusions(expiry_raw or '', "NUMERIC")
+    cleaned = re.sub(r'[^0-9]', '0', num_str).ljust(6, '0')[:6]
+    return f"20{cleaned[0:2]}-{cleaned[2:4]}-{cleaned[4:6]}"
+
+
 def parse_mrz_td3(line1: str, line2: str) -> Dict[str, Any]:
     """
     Parses ICAO Doc 9303 TD3 (Passport - 2 lines of 44 characters).
@@ -88,8 +106,8 @@ def parse_mrz_td3(line1: str, line2: str) -> Dict[str, Any]:
     all_valid = doc_num_valid and dob_valid and expiry_valid and composite_valid
 
     # Format dates to standard strings
-    dob_formatted = f"19{dob_raw[0:2]}-{dob_raw[2:4]}-{dob_raw[4:6]}" if int(dob_raw[0:2]) > 30 else f"20{dob_raw[0:2]}-{dob_raw[2:4]}-{dob_raw[4:6]}"
-    expiry_formatted = f"20{expiry_raw[0:2]}-{expiry_raw[2:4]}-{expiry_raw[4:6]}"
+    dob_formatted = _safe_format_dob(dob_raw)
+    expiry_formatted = _safe_format_expiry(expiry_raw)
 
     return {
         "format": "TD3",
@@ -152,8 +170,8 @@ def parse_mrz_td1(line1: str, line2: str, line3: str) -> Dict[str, Any]:
 
     all_valid = doc_num_valid and dob_valid and expiry_valid and composite_valid
 
-    dob_formatted = f"19{dob_raw[0:2]}-{dob_raw[2:4]}-{dob_raw[4:6]}" if int(dob_raw[0:2]) > 30 else f"20{dob_raw[0:2]}-{dob_raw[2:4]}-{dob_raw[4:6]}"
-    expiry_formatted = f"20{expiry_raw[0:2]}-{expiry_raw[2:4]}-{expiry_raw[4:6]}"
+    dob_formatted = _safe_format_dob(dob_raw)
+    expiry_formatted = _safe_format_expiry(expiry_raw)
 
     return {
         "format": "TD1",
@@ -227,8 +245,8 @@ def parse_mrz_td2(line1: str, line2: str) -> Dict[str, Any]:
 
     all_valid = doc_num_valid and dob_valid and expiry_valid and composite_valid
 
-    dob_formatted = f"19{dob_raw[0:2]}-{dob_raw[2:4]}-{dob_raw[4:6]}" if int(dob_raw[0:2]) > 30 else f"20{dob_raw[0:2]}-{dob_raw[2:4]}-{dob_raw[4:6]}"
-    expiry_formatted = f"20{expiry_raw[0:2]}-{expiry_raw[2:4]}-{expiry_raw[4:6]}"
+    dob_formatted = _safe_format_dob(dob_raw)
+    expiry_formatted = _safe_format_expiry(expiry_raw)
 
     doc_type = "VISA" if doc_code.startswith("V") else "OFFICIAL_TRAVEL_DOC_TD2"
 

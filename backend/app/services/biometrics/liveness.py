@@ -39,16 +39,33 @@ def compute_passive_liveness(face_image: np.ndarray) -> Dict[str, Any]:
     screen_glare_penalty = max(0.0, (glare_ratio - 0.03) * 350.0) if glare_ratio > 0.03 else 0.0
     sat_score = min(20.0, (sat_mean / 128.0) * 15.0)
     
-    liveness_score = max(0.0, min(100.0, (texture_score * 0.85) - screen_glare_penalty + sat_score))
-    
-    is_live = liveness_score >= 60.0
+    # 4. Deepfake & AI-Generated Synthetic Face Detection (Diffusion / GAN / Morph)
+    try:
+        from ..forensics.deepfake_detector import detect_synthetic_face
+        synth_eval = detect_synthetic_face(face_image)
+        is_synthetic = synth_eval.get("is_synthetic", False)
+        synth_prob = synth_eval.get("synthetic_probability", 0.0)
+    except Exception:
+        is_synthetic = False
+        synth_prob = 0.0
+
+    if is_synthetic or synth_prob >= 0.50:
+        liveness_score = round(float(max(5.0, min(35.0, (1.0 - synth_prob) * 50.0))), 1)
+        is_live = False
+        spoof_classification = "AI_GENERATED_SPOOF"
+    else:
+        liveness_score = float(max(0.0, min(100.0, (texture_score * 0.85) - screen_glare_penalty + sat_score)))
+        is_live = bool(liveness_score >= 60.0)
+        spoof_classification = "REAL_HUMAN" if is_live else ("SCREEN_REPLAY" if glare_ratio > 0.08 else "PRINTED_PHOTO")
 
     return {
-        "liveness_score": round(liveness_score, 1),
-        "texture_sharpness": round(laplacian_var, 2),
-        "specular_glare_ratio": round(glare_ratio, 4),
+        "liveness_score": round(float(liveness_score), 1),
+        "texture_sharpness": round(float(laplacian_var), 2),
+        "specular_glare_ratio": round(float(glare_ratio), 4),
         "is_live": is_live,
-        "spoof_classification": "REAL_HUMAN" if is_live else ("SCREEN_REPLAY" if glare_ratio > 0.08 else "PRINTED_PHOTO")
+        "is_synthetic": is_synthetic,
+        "synthetic_probability": round(float(synth_prob), 3),
+        "spoof_classification": spoof_classification
     }
 
 def verify_active_challenge(

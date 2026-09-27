@@ -2,12 +2,13 @@ from app.services.risk_engine import evaluate_screening_risk
 
 def test_risk_engine_verified():
     quality = {"quality_score": 92.0, "is_blurry": False}
-    mrz = {"all_check_digits_valid": True}
+    mrz = {"all_check_digits_valid": True, "document_number": "P12345678"}
     forensics = {"ela": {"is_spliced": False}, "copy_move": {"copy_move_detected": False}}
-    biometrics = {"cosine_similarity": 0.92, "liveness_score": 95.0}
-    database = {"is_blacklisted": False, "duplicate_identities": []}
+    biometrics = {"has_live_capture": True, "cosine_similarity": 0.92, "liveness_score": 95.0, "verdict": "MATCH"}
+    database = {"is_blacklisted": False, "duplicate_identities": [], "duplicate_search": {}}
+    validation = {"validation_score": 100.0, "format_anomalies": [], "layout_anomalies": []}
 
-    res = evaluate_screening_risk(quality, mrz, forensics, biometrics, database)
+    res = evaluate_screening_risk(quality, mrz, forensics, biometrics, database, document_validation=validation)
     assert res["outcome"] == "VERIFIED"
     assert res["overall_risk_score"] >= 85.0
 

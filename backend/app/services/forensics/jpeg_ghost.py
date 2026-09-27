@@ -36,11 +36,18 @@ def compute_jpeg_ghosts(image_bgr: np.ndarray, qualities: List[int] = [60, 75, 8
 
     ghost_mean = float(np.mean(ghost_norm))
     ghost_max = int(np.max(ghost_norm))
-    has_ghosts = float(np.sum(ghost_norm > 180) / (ghost_norm.size + 1e-6)) > 0.04
+    
+    # Structural smoothing to suppress thin font edges
+    smoothed_ghost = cv2.GaussianBlur(ghost_norm, (21, 21), 0)
+    high_variance_ratio = float(np.sum(smoothed_ghost > 200) / (smoothed_ghost.size + 1e-6))
+    
+    # Genuine JPEG ghosts form large localized patches (> 6% area after spatial smoothing)
+    has_ghosts = high_variance_ratio > 0.06
 
     return ghost_heatmap, {
         "ghost_mean": round(ghost_mean, 2),
         "ghost_max": ghost_max,
+        "high_variance_ratio": round(high_variance_ratio, 4),
         "ghosts_detected": has_ghosts,
         "ghost_risk_tier": "HIGH" if has_ghosts else "LOW"
     }

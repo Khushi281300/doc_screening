@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Info, AlertCircle, Microscope, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Info, AlertCircle, Microscope, CheckCircle2, ShieldAlert, GitMerge, Stamp, Sparkles } from 'lucide-react';
 import EmptyStationState from '../layout/EmptyStationState';
 
 const LAYERS = [
@@ -289,6 +289,197 @@ export default function ForensicViewerPane({
             <span>Digital editing software metadata detected: <strong>{metrics.exif.software_tag}</strong></span>
           </div>
         )}
+
+        {/* ML Forensic Signal Fusion & Advanced Forensics (Morph, Deepfake, Stamp) */}
+        {(() => {
+          const mlFusion = metrics.ml_fusion || inspectionResult?.ml_tamper_fusion;
+          const stamp = metrics.stamp;
+          const morph = metrics.morph;
+          const deepfake = metrics.deepfake;
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+              {/* ML Forensic Signal Fusion Summary Banner */}
+              {mlFusion && (
+                <div style={{
+                  background: mlFusion.verdict === 'TAMPERED' ? '#FEF2F2' : mlFusion.verdict === 'SUSPICIOUS' ? '#FFFBEB' : '#F0FDF4',
+                  border: `1px solid ${mlFusion.verdict === 'TAMPERED' ? '#FECACA' : mlFusion.verdict === 'SUSPICIOUS' ? '#FDE68A' : '#BBF7D0'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <GitMerge size={16} color={mlFusion.verdict === 'TAMPERED' ? '#DC2626' : mlFusion.verdict === 'SUSPICIOUS' ? '#D97706' : '#16A34A'} />
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#1E293B' }}>
+                        ML Forensic Signal Fusion (11 Multi-Spectral Signals)
+                      </span>
+                      <span style={{ fontSize: '10px', color: '#64748B', background: '#F1F5F9', padding: '1px 6px', borderRadius: 4 }}>
+                        {mlFusion.model_name?.includes('RandomForest') ? 'RandomForest Ensemble' : 'Logistic Fusion Engine'}
+                      </span>
+                    </div>
+                    <span style={{
+                      fontSize: '10.5px',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: 20,
+                      background: mlFusion.verdict === 'TAMPERED' ? '#FEE2E2' : mlFusion.verdict === 'SUSPICIOUS' ? '#FEF3C7' : '#DCFCE7',
+                      color: mlFusion.verdict === 'TAMPERED' ? '#991B1B' : mlFusion.verdict === 'SUSPICIOUS' ? '#92400E' : '#166534'
+                    }}>
+                      {mlFusion.verdict}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center', marginBottom: mlFusion.primary_contributors?.length ? 8 : 0 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748B', marginBottom: 4 }}>
+                        <span>Forensic Integrity Score:</span>
+                        <strong style={{ color: '#0F172A' }}>{(mlFusion.forensic_integrity_score || 0).toFixed(0)} / 100</strong>
+                      </div>
+                      <div style={{ width: '100%', height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${Math.min(100, Math.max(0, mlFusion.forensic_integrity_score || 0))}%`,
+                          height: '100%',
+                          background: (mlFusion.forensic_integrity_score || 0) < 50 ? '#DC2626' : (mlFusion.forensic_integrity_score || 0) < 75 ? '#F59E0B' : '#16A34A',
+                          borderRadius: 3
+                        }} />
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '11.5px', color: '#475569' }}>
+                      Calibrated Tamper Probability: <strong style={{ color: mlFusion.tamper_probability > 0.4 ? '#DC2626' : '#16A34A' }}>
+                        {((mlFusion.tamper_probability || 0) * 100).toFixed(1)}%
+                      </strong>
+                    </div>
+                  </div>
+
+                  {mlFusion.primary_contributors && mlFusion.primary_contributors.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center', marginTop: 4 }}>
+                      <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: 600 }}>Key Contributing Signals:</span>
+                      {mlFusion.primary_contributors.map((c, i) => (
+                        <span key={i} style={{
+                          fontSize: '10px',
+                          padding: '1px 6px',
+                          borderRadius: 4,
+                          background: c.severity === 'CRITICAL' ? '#FEE2E2' : c.severity === 'HIGH' ? '#FEF3C7' : '#EFF6FF',
+                          color: c.severity === 'CRITICAL' ? '#991B1B' : c.severity === 'HIGH' ? '#92400E' : '#1E40AF',
+                          fontWeight: 500
+                        }}>
+                          {c.signal.replace(/_/g, ' ')} ({c.severity})
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Grid of Sub-Forensics: Morph, Deepfake, Stamp */}
+              {(morph || deepfake || stamp) && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+                  {/* Face Morphing Attack Card */}
+                  {morph && (
+                    <div style={{
+                      background: morph.is_morphed ? '#FEF2F2' : morph.verdict === 'SUSPICIOUS_MORPH' ? '#FFFBEB' : '#F0FDF4',
+                      border: `1px solid ${morph.is_morphed ? '#FECACA' : morph.verdict === 'SUSPICIOUS_MORPH' ? '#FDE68A' : '#BBF7D0'}`,
+                      borderRadius: 8,
+                      padding: '12px 14px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <Sparkles size={13} color="#7C3AED" /> Face Morph Attack
+                        </span>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '2px 7px',
+                          borderRadius: 20,
+                          background: morph.is_morphed ? '#FEE2E2' : morph.verdict === 'SUSPICIOUS_MORPH' ? '#FEF3C7' : '#DCFCE7',
+                          color: morph.is_morphed ? '#991B1B' : morph.verdict === 'SUSPICIOUS_MORPH' ? '#92400E' : '#166534'
+                        }}>
+                          {morph.verdict}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748B', marginBottom: 4 }}>
+                        Morph probability: <strong style={{ color: '#334155' }}>{((morph.morph_probability || 0) * 100).toFixed(1)}%</strong>
+                        &nbsp;&bull;&nbsp;FFT: <strong>{morph.fft_symmetry_score?.toFixed(3) ?? 'N/A'}</strong>
+                      </div>
+                      {morph.contributing_factors?.length > 0 && (
+                        <div style={{ fontSize: '10.5px', color: '#7C3AED', fontStyle: 'italic', lineHeight: 1.4 }}>
+                          • {morph.contributing_factors[0]}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* AI Deepfake / Synthetic Face Card */}
+                  {deepfake && (
+                    <div style={{
+                      background: deepfake.is_synthetic ? '#FEF2F2' : '#F0FDF4',
+                      border: `1px solid ${deepfake.is_synthetic ? '#FECACA' : '#BBF7D0'}`,
+                      borderRadius: 8,
+                      padding: '12px 14px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <ShieldAlert size={13} color="#DC2626" /> AI / Deepfake Face
+                        </span>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '2px 7px',
+                          borderRadius: 20,
+                          background: deepfake.is_synthetic ? '#FEE2E2' : '#DCFCE7',
+                          color: deepfake.is_synthetic ? '#991B1B' : '#166534'
+                        }}>
+                          {deepfake.status}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748B', marginBottom: 4 }}>
+                        Synthetic prob: <strong style={{ color: '#334155' }}>{((deepfake.synthetic_probability || 0) * 100).toFixed(1)}%</strong>
+                        &nbsp;&bull;&nbsp;Chroma: <strong>{deepfake.chroma_coherence?.toFixed(3) ?? 'N/A'}</strong>
+                      </div>
+                      <div style={{ fontSize: '10.5px', color: '#64748B', fontStyle: 'italic', lineHeight: 1.4 }}>
+                        {deepfake.explanation?.slice(0, 85)}{(deepfake.explanation?.length > 85) ? '...' : ''}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Official Stamp & Security Seal Card */}
+                  {stamp && (
+                    <div style={{
+                      background: stamp.status === 'SUSPICIOUS' ? '#FEF2F2' : stamp.status === 'NO_STAMP' ? '#F8FAFC' : '#F0FDF4',
+                      border: `1px solid ${stamp.status === 'SUSPICIOUS' ? '#FECACA' : stamp.status === 'NO_STAMP' ? '#E2E8F0' : '#BBF7D0'}`,
+                      borderRadius: 8,
+                      padding: '12px 14px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <Stamp size={13} color="#0891B2" /> Stamp & Seal Verifier
+                        </span>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '2px 7px',
+                          borderRadius: 20,
+                          background: stamp.status === 'SUSPICIOUS' ? '#FEE2E2' : stamp.status === 'NO_STAMP' ? '#F1F5F9' : '#DCFCE7',
+                          color: stamp.status === 'SUSPICIOUS' ? '#991B1B' : stamp.status === 'NO_STAMP' ? '#475569' : '#166534'
+                        }}>
+                          {stamp.status}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748B', marginBottom: 4 }}>
+                        Stamps: <strong style={{ color: '#334155' }}>{stamp.stamp_count || 0}</strong>
+                        &nbsp;&bull;&nbsp;Seal Match: <strong>{((stamp.similarity_to_reference || 0) * 100).toFixed(0)}%</strong>
+                      </div>
+                      <div style={{ fontSize: '10.5px', color: '#64748B', fontStyle: 'italic', lineHeight: 1.4 }}>
+                        {stamp.explanation?.slice(0, 85)}{(stamp.explanation?.length > 85) ? '...' : ''}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

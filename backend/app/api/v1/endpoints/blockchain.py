@@ -9,6 +9,7 @@ class CertificateRequest(BaseModel):
     scan_record: Dict[str, Any]
 
 @router.get("/ledger/blocks", tags=["Blockchain & Ledger"])
+@router.get("/chain", tags=["Blockchain & Ledger"])
 async def get_blockchain_ledger():
     return {
         "status": "SUCCESS",

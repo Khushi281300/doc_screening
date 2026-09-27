@@ -16,6 +16,8 @@ class BlacklistAddRequest(BaseModel):
     severity: str = "HIGH"
 
 @router.get("/watchlist", tags=["Watchlist"])
+@router.get("/list", tags=["Watchlist"])
+@router.get("/check", tags=["Watchlist"])
 async def get_watchlist(
     db: Session = Depends(get_db),
     officer: Officer = Depends(get_current_officer)

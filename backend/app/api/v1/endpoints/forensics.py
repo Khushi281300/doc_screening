@@ -11,6 +11,11 @@ from ....services.forensics import (
     generate_gradcam_saliency,
     inspect_image_metadata
 )
+from ....services.forensics.deepfake_detector import detect_synthetic_face
+from ....services.forensics.morph_detector import detect_face_morphing
+from ....services.forensics.stamp_detector import detect_and_verify_stamps
+from ....services.forensics.ml_fusion import compute_ml_tamper_fusion
+from ....services.biometrics import extract_face_crop
 from ....utils.image_converter import base64_to_cv2, cv2_to_base64
 
 router = APIRouter()
@@ -50,6 +55,29 @@ async def run_full_forensics(req: ForensicsRequest):
         # 7. EXIF Metadata
         exif_metrics = inspect_image_metadata(raw_bytes)
 
+        # 8. Face-Level Forensics: Deepfake & Morphing
+        face_crop = extract_face_crop(image)
+        deepfake_metrics = detect_synthetic_face(face_crop)
+        morph_metrics = detect_face_morphing(face_crop)
+
+        # 9. Stamp / Seal Forensics
+        stamp_metrics = detect_and_verify_stamps(image)
+
+        # 10. ML Multi-Signal Fusion (11 signals)
+        forensic_dict = {
+            "ela": ela_metrics,
+            "srm": srm_metrics,
+            "jpeg_ghost": ghost_metrics,
+            "copy_move": copy_move_metrics,
+            "recapture": moire_metrics,
+            "deep_tamper": deep_metrics,
+            "exif": exif_metrics,
+            "deepfake": deepfake_metrics,
+            "morph": morph_metrics,
+            "stamp": stamp_metrics
+        }
+        ml_fusion_results = compute_ml_tamper_fusion(forensic_dict)
+
         return {
             "status": "SUCCESS",
             "layers": {
@@ -67,7 +95,11 @@ async def run_full_forensics(req: ForensicsRequest):
                 "copy_move": copy_move_metrics,
                 "recapture": moire_metrics,
                 "deep_tamper": deep_metrics,
-                "exif": exif_metrics
+                "exif": exif_metrics,
+                "deepfake": deepfake_metrics,
+                "morph": morph_metrics,
+                "stamp": stamp_metrics,
+                "ml_fusion": ml_fusion_results
             }
         }
     except Exception as e:

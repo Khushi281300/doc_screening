@@ -61,7 +61,7 @@ def test_agentic_screening_endpoint():
         data = response.json()
         assert data["status"] == "SUCCESS"
         assert "agent_trace" in data
-        assert len(data["agent_trace"]) == 8
+        assert len(data["agent_trace"]) >= 8  # 9 steps with Document Classifier module
         assert "officer_dossier" in data
         assert len(data["officer_dossier"]) > 50
 

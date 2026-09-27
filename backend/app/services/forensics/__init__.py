@@ -5,6 +5,7 @@ from .copy_move import detect_copy_move_forgery
 from .recapture import analyze_2d_fft_moire
 from .deep_classifier import generate_gradcam_saliency
 from .exif_inspector import inspect_image_metadata
+from .morph_detector import detect_face_morphing
 
 __all__ = [
     "compute_error_level_analysis",
@@ -13,5 +14,6 @@ __all__ = [
     "detect_copy_move_forgery",
     "analyze_2d_fft_moire",
     "generate_gradcam_saliency",
-    "inspect_image_metadata"
+    "inspect_image_metadata",
+    "detect_face_morphing"
 ]
