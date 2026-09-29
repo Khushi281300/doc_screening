@@ -1,21 +1,17 @@
 @echo off
-title ARGUS Backend - FastAPI Server
+title CHRONICLE Backend - API server
 cd /d "%~dp0"
 echo =========================================================
-echo    ARGUS Border Screening Backend (FastAPI)
+echo    CHRONICLE - API server (FastAPI)
 echo =========================================================
 echo.
-
 if exist "venv\Scripts\activate.bat" (
-    echo Activating Python Virtual Environment...
     call venv\Scripts\activate.bat
 ) else (
-    echo [WARNING] venv not found at %~dp0venv. Using system Python.
+    echo [WARNING] venv not found - using system Python. Run setup.bat to fix.
 )
-
-echo Starting Uvicorn on http://127.0.0.1:8000 ...
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-
+echo Starting on http://127.0.0.1:8000 ...
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 echo.
 echo [SERVER STOPPED]
 pause

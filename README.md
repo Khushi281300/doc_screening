@@ -1,197 +1,95 @@
-# ARGUS - AI-Based Fake Identity Document Screening System
+# CHRONICLE — Secure Digital Document Management System for Legal & Investigation Records
 
-> AI-powered border screening pipeline for detecting forged and fraudulent identity documents.
-> Built for SSB/MoHA lab prototype evaluation.
+**Smart India Hackathon 2026 · PS 26190 · Ministry of Home Affairs / NCRB (Women Safety Division)**
+Theme: Blockchain & Cybersecurity · Category: Software
 
----
+One tamper-evident, access-controlled record for every FIR, case diary, witness statement, seizure memo,
+evidence exhibit, FSL report, charge sheet and court order — shared between the police station,
+the Forensic Science Laboratory, the prosecution and the court.
 
-## Architecture Overview
+## What it does (mapped to the problem statement)
 
-`	ext
-                    ARGUS PIPELINE
-                          |
-              +-----------v-----------+
-              |   MODULE 1: OCR       |
-              | CNN Doc Classifier    |
-              | (ResNet18 / Heuristic)|
-              | Passport/Visa/DL/NID  |
-              |         +             |
-              | EasyOCR Field Extract |
-              | Name, Num, DOB, Expiry|
-              |         +             |
-              | MRZ TD1/TD2/TD3 Parse |
-              +-----------+-----------+
-                          |
-              +-----------v-----------+
-              |  MODULE 2: VALIDATION |
-              | ICAO 9303 MRZ check   |
-              | 7-3-1 Luhn math       |
-              | Date/chronology check |
-              | Field format checks   |
-              | Layout integrity      |
-              +-----------+-----------+
-                          |
-              +-----------v-----------+
-              | MODULE 3: TAMPERING   |
-              | Classical:            |
-              | ELA SRM CopyMove      |
-              | JPEG-Ghost Moire EXIF |
-              | DL/ML:                |
-              | CNN Tamper Classifier |
-              | Deepfake Detection    |
-              | Stamp Verifier        |
-              | ML Signal Fusion      |
-              +-----------+-----------+
-                          |
-              +-----------v-----------+
-              |  MODULE 4: BIOMETRICS |
-              | FaceNet 512-D embed   |
-              | ArcFace benchmark     |
-              | 1:1 cosine similarity |
-              | Anti-spoofing liveness|
-              | 1:N duplicate search  |
-              +-----------+-----------+
-                          |
-              +-----------v-----------+
-              |  RISK FUSION ENGINE   |
-              | Quality       x10%    |
-              | Validation    x20%    |
-              | MRZ           x15%    |
-              | Forensics     x25%    |
-              | Biometrics    x25%    |
-              | Watchlist      x5%    |
-              |                       |
-              | Hard Rules:           |
-              | Watchlist -> REJECTED |
-              | MRZ fail  -> REVIEW   |
-              +-----------+-----------+
-                          |
-              +------+----+----+------+
-              |      |         |      |
-           VERIFIED  MANUAL  REJECTED
-                      REVIEW
-                          |
-              +-----------v-----------+
-              | HITL Officer Review   |
-              | UV/Tactile/Watermark  |
-              +-----------+-----------+
-                          |
-              +-----------v-----------+
-              | Crypto Audit Ledger   |
-              | SHA-256 Merkle Chain  |
-              +-----------------------+
-`
-
-## Tech Stack
-
-| Layer | Technology |
+| PS requirement | Implementation |
 |---|---|
-| Frontend | React 18 + Vite, Vanilla CSS, Lucide icons |
-| Backend | FastAPI (Python 3.12), SQLAlchemy, SQLite |
-| OCR | EasyOCR (LSTM + CNN backend) |
-| Doc Classifier | PyTorch ResNet18 + Layout / MRZ priors |
-| Forensics | OpenCV, NumPy, scikit-image, SciPy |
-| ML Fusion | Calibrated Multivariate Logistic Regression |
-| Face Verification | FaceNet (512-D), ArcFace margin benchmarking |
-| Anti-spoofing | Passive liveness (texture analysis) |
-| Risk Engine | Custom weighted multi-signal fusion |
-| Audit Ledger | SHA-256 Merkle chain (tamper-evident) |
-| AI Copilot | Local Ollama LLM (mistral/llama3) |
-| Auth | JWT bearer, role-based (Officer/Supervisor) |
+| Digitise & centralise storage | Case → documents model; files stored in an **AES-256-GCM encrypted vault** (`backend/case_vault/`) |
+| Secure access & confidentiality | JWT login; **5 agency roles** (IO, SHO, FSL, Prosecutor, Magistrate); a case is visible only to agencies it was shared with; per-role upload rights |
+| Prevent unauthorised modification | Every file is **SHA-256 hashed** on ingest; new content = new version (old versions never overwritten); SHO can **lock** a case; filing before the court locks it automatically |
+| Complete audit trail | **Hash-chained, HMAC-signed chain of custody**: every create / upload / view / download / redact / transfer / certify / status change. `Verify integrity` recomputes the whole chain and re-hashes every stored file |
+| Efficient search & retrieval | Full-text search across FIR numbers, sections, accused, document titles, hashes and **extracted document text** (PDF / DOCX / TXT) |
+| Collaboration | **Share / transfer** to FSL, Prosecutor, Court with automatic status change (`FSL_PENDING → CHARGE_SHEET_DRAFTED → CHARGE_SHEET_FILED → IN_TRIAL → DISPOSED`) |
+| Legal validity / evidentiary integrity | **BSA 2023 Section 63(4)** electronic-evidence certificate bound to the file hash + custody root, re-verifiable in one click |
+| Women Safety Division mandate | **Sec 72 BNS redaction** (victim / witness names, phone, e-mail, Aadhaar, PAN, address, PIN). Non-police agencies only ever receive the redacted copy of women-safety cases |
+| Statutory compliance | **Sec 193 BNSS charge-sheet clock** (60 / 90 days) with dashboard alerts at ≤ 10 days |
+| Evidence tamper screening | Image exhibits are screened on ingest with **ELA, copy-move (ORB/RANSAC) and EXIF** analysis; flags go into the custody chain |
 
-## Running the Project
+The ledger is a **tamper-evident SHA-256 hash chain with HMAC signatures** stored in SQLite — not a distributed
+multi-node blockchain. Say that honestly to the jury; the verification demo is the strong part.
 
-### Backend
-`ash
+## Run (Windows)
+
+```
+run_system.bat
+```
+starts the FastAPI backend (http://127.0.0.1:8000, docs at /api/v1/docs) and the React UI (http://localhost:5173).
+
+Manual:
+```
 cd backend
+python -m venv venv && venv\Scripts\activate
 pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
-`
+python -m uvicorn app.main:app --reload
 
-### Frontend
-`ash
 cd frontend
 npm install
 npm run dev
-`
+```
+Database (`backend/chronicle.db`) and vault are created and seeded on first start. Delete both to reset the demo.
 
-Open http://localhost:5173
+### Demo logins (password `demo1234`)
 
-Default Login: officer1 / password123 (Inspector) or dmin / dmin123 (Supervisor)
+| Badge | Role | Can do |
+|---|---|---|
+| `IO-1001` | Investigating Officer | register FIRs, upload FIR / diary / statements / memos / exhibits / charge sheet, redact, certify, share with FSL & prosecutor |
+| `SHO-001` | Station House Officer | everything the IO can + lock/unlock, change status, file before the Court |
+| `FSL-008` | FSL Examiner | read shared cases (redacted for women-safety), attach & certify forensic reports |
+| `PP-021` | Public Prosecutor | read shared cases (redacted), upload charge sheet / legal notice |
+| `MAG-004` | Magistrate | read filed cases (originals), verify chain & certificates, upload orders / judgments, set In Trial / Disposed |
 
-## Test Results
+## Suggested 3-minute demo
 
-**24 passed, 0 failures** in ~36s (100% test suite passing)
+1. Login as **IO** → Dashboard → open **FIR 104/2026** → open the FIR → **Generate Sec 72 redaction** (victim: `Pooja Sharma`).
+2. **Upload document** → a phone photo / scanned exhibit → forensic report tab (ELA heat-map, copy-move, EXIF).
+3. **Issue Sec 63 certificate** → shows signature / hash / chain-root verification.
+4. **Verify integrity** → chain valid. (Optional: edit a row in `chronicle.db` with any SQLite tool, verify again → chain break is reported.)
+5. Sign out → login as **FSL-008** → same FIR now shows only the redacted text; download gives the redacted copy.
+6. Login as **SHO-001** → **Share / transfer → File before the Court** → case locks; **MAG-004** can now open it and verify.
 
-Run tests:
-`ash
-cd backend
-python -m pytest tests/ -v
-`
+## Tests
 
-## Module 1 - OCR Extraction and Document Classification
+```
+python -m pytest -q        # from the repo root; 22 tests
+```
 
-- doc_classifier.py: Deep document type classifier routing to ICAO, Visa, DL, or ID pipelines
-- engine.py: EasyOCR engine with morphological MRZ strip localization and VIZ parsing
-- extractors.py: Per-type field extractors (Visa, DL, National ID)
-- mrz/parser.py: TD1/TD2/TD3 MRZ parser with 7-3-1 check digit validation
+## Layout
 
-## Module 2 - Document Validation
+```
+backend/app
+  api/v1/endpoints/{auth,cases,audit,health}.py   REST API
+  core/{config,security,dependencies}.py          settings, JWT, role guards
+  db/{models,seed}.py                             SQLAlchemy models + demo data
+  services/vault.py                               AES-256-GCM encrypted file store
+  services/custody.py                             hash chain + verification
+  services/forensics/{ela,copy_move,exif_inspector,screening}.py
+  services/privacy/redaction.py                   Sec 72 BNS masking
+  services/compliance/bsa_certificate.py          Sec 63 BSA certificate
+  services/text_extract.py                        PDF / DOCX / TXT text for search
+frontend/src
+  pages/{Dashboard,CaseWorkspace,SearchPage,AuditTrail,Login}.jsx
+  components/cases/{UploadModal,DocumentDetail,CertificateModal}.jsx
+  components/layout/{Sidebar,Navbar,Footer}.jsx · components/ui.jsx
+```
 
-- document_validation.py: ICAO 9303 MRZ Luhn checksums, chronological validity (DOB < Issue < Expiry), ISO 3166-1 country code lookup, format regex, and layout scoring
-
-## Module 3 - Tampering and Deepfake Detection
-
-- ela.py: Error Level Analysis (JPEG compression difference)
-- srm.py: Steganographic Rich Model 3-filter noise residuals
-- copy_move.py: SIFT feature matching with RANSAC affine clustering
-- jpeg_ghost.py: Multi-quality recompression ghost curve min/max variance
-- 
-ecapture.py: Screen recapture / Moire fringe detection via 2D FFT
-- exif_inspector.py: Software tags (Photoshop/GIMP) and recompression metadata
-- deep_classifier.py: CNN tamper classification and Grad-CAM saliency
-- deepfake_detector.py: Azimuthal FFT spectral artifacts & chromatic covariance
-- stamp_detector.py: Physical rubber stamp ink diffusion and contour analysis
-- ml_fusion.py: Logistic regression fusion of all 9 forensic signals into calibrated probability
-
-## Module 4 - Face Verification and Duplicate Search
-
-- matcher.py: FaceNet 512-D embedding extraction, cosine similarity, ArcFace margin benchmarking
-- liveness.py: Passive anti-spoofing texture and edge frequency analysis
-- duplicate_search.py: 1:N face embedding search across checkpoint history
-
-## API Endpoints
-
-- POST /api/v1/scan/inspect-full - Full 9-step agentic pipeline
-- POST /api/v1/scan/copilot-chat - AI officer copilot
-- GET  /api/v1/scan/review-queue - MANUAL_REVIEW queue
-- POST /api/v1/scan/hitl-override - Officer override + audit seal
-- GET  /api/v1/blacklist/watchlist - Active watchlist
-- GET  /api/v1/blockchain/ledger/blocks - Tamper-evident audit ledger
-- GET  /api/v1/analytics/checkpoint/metrics - Checkpoint metrics
-
-## Audit Ledger Note
-
-This is a Tamper-Evident Cryptographic Audit Ledger using SHA-256 Merkle chain hashing.
-It is NOT a distributed blockchain. It does not implement distributed consensus or multi-node P2P networks.
-Correct terminology: **Tamper-Evident Cryptographic Audit Ledger**.
-
-## Pre-Submission Checklist
-
-- [x] Module 1: Document Classification (CNN + layout priors)
-- [x] Module 1: OCR + MRZ Extraction (EasyOCR + morphological strip detection)
-- [x] Module 2: ICAO 9303 MRZ 7-3-1 Luhn check-digit validation
-- [x] Module 2: Chronology, ISO 3166-1 country codes, and layout validation
-- [x] Module 3: 5 Classical Forensics (ELA, SRM, Copy-Move, JPEG Ghost, Moire)
-- [x] Module 3: 4 DL/ML Forensics (EXIF, Deep Classifier, Deepfake, Stamp Verifier)
-- [x] Module 3: ML Forensic Signal Fusion (Calibrated Logistic Regression)
-- [x] Module 4: FaceNet 512-D + ArcFace benchmarking (1:1 Biometrics)
-- [x] Module 4: Passive anti-spoofing liveness verification
-- [x] Module 4: 1:N Duplicate identity search
-- [x] Multi-signal Risk Fusion Engine (3-tier verdict: VERIFIED / MANUAL_REVIEW / REJECTED)
-- [x] Human-in-the-Loop officer review & override workflow
-- [x] Tamper-evident SHA-256 cryptographic audit ledger
-- [x] AI officer copilot with plain-English investigative dossiers
-- [x] JWT authentication + role-based access (Inspector vs Supervisor)
-- [x] 24/24 backend test suite passing
-- [x] Live demo preset scenarios with authentic live selfie capture
+## Known limits
+* No OCR is bundled: scanned images get forensic screening but no searchable text (paste text into the redaction dialog if needed).
+* Certificate and custody signatures are HMAC with the server secret; swap `services/custody.py` / `bsa_certificate.py` for PKI (e-Sign / DSC) for production.
+* SQLite + local vault are for the prototype; both are behind one interface and can be moved to PostgreSQL / object storage.

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Iterable
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -6,12 +6,10 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .security import decode_access_token
 from ..db.models import SessionLocal
-from ..models.officer import Officer, OfficerRole
+from ..models.officer import Officer
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login",
-    auto_error=False
-)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
+
 
 def get_db():
     db = SessionLocal()
@@ -20,10 +18,9 @@ def get_db():
     finally:
         db.close()
 
-async def get_current_officer(
-    token: Optional[str] = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-) -> Officer:
+
+async def get_current_officer(token: Optional[str] = Depends(oauth2_scheme),
+                              db: Session = Depends(get_db)) -> Officer:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -31,28 +28,22 @@ async def get_current_officer(
     )
     if not token:
         raise credentials_exception
-
     payload = decode_access_token(token)
-    if payload is None:
+    if payload is None or not payload.get("sub"):
         raise credentials_exception
-
-    badge_id: Optional[str] = payload.get("sub")
-    if not badge_id:
-        raise credentials_exception
-
-    officer = db.query(Officer).filter(Officer.badge_id == badge_id).first()
+    officer = db.query(Officer).filter(Officer.badge_id == payload["sub"]).first()
     if officer is None:
         raise credentials_exception
-
     return officer
 
-async def require_admin(
-    officer: Officer = Depends(get_current_officer)
-) -> Officer:
-    role_val = officer.role.value if hasattr(officer.role, "value") else str(officer.role)
-    if role_val != "ADMIN" and role_val != OfficerRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Administrative clearance required"
-        )
-    return officer
+
+def require_roles(*roles: str):
+    """Dependency factory: only the listed roles may call the endpoint."""
+    allowed = set(roles)
+
+    async def _guard(officer: Officer = Depends(get_current_officer)) -> Officer:
+        if officer.role_value not in allowed:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Requires role: {', '.join(sorted(allowed))}")
+        return officer
+    return _guard

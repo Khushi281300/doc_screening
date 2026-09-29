@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ....core.security import verify_password, create_access_token
 from ....core.dependencies import get_db, get_current_officer
-from ....models.officer import Officer
+from ....models.officer import Officer, ROLE_LABELS
 
 router = APIRouter()
 
@@ -17,12 +17,20 @@ class OfficerProfileResponse(BaseModel):
     badge_id: str
     name: str
     role: str
-    checkpoint_id: str
+    role_label: str
+    station_id: str
 
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     officer: OfficerProfileResponse
+
+def _profile(officer: Officer) -> OfficerProfileResponse:
+    return OfficerProfileResponse(
+        badge_id=officer.badge_id, name=officer.name, role=officer.role_value,
+        role_label=ROLE_LABELS.get(officer.role_value, officer.role_value), station_id=officer.station_id,
+    )
+
 
 @router.post("/login", response_model=LoginResponse, tags=["Authentication"])
 async def login(req: LoginRequest, db: Session = Depends(get_db)):
@@ -47,38 +55,15 @@ async def login(req: LoginRequest, db: Session = Depends(get_db)):
     if not verify_password(req.password, officer.password_hash):
         raise generic_auth_error
 
-    role_str = officer.role.value if hasattr(officer.role, "value") else str(officer.role)
-    token_data = {
-        "sub": officer.badge_id,
-        "name": officer.name,
-        "role": role_str,
-        "checkpoint_id": officer.checkpoint_id
-    }
-    access_token = create_access_token(data=token_data)
-
-    return LoginResponse(
-        access_token=access_token,
-        token_type="bearer",
-        officer=OfficerProfileResponse(
-            badge_id=officer.badge_id,
-            name=officer.name,
-            role=role_str,
-            checkpoint_id=officer.checkpoint_id
-        )
-    )
+    access_token = create_access_token(data={"sub": officer.badge_id, "role": officer.role_value})
+    return LoginResponse(access_token=access_token, token_type="bearer", officer=_profile(officer))
 
 @router.get("/me", response_model=OfficerProfileResponse, tags=["Authentication"])
 async def get_my_profile(officer: Officer = Depends(get_current_officer)):
     """
     Returns the authenticated officer's profile extracted from the validated JWT session.
     """
-    role_str = officer.role.value if hasattr(officer.role, "value") else str(officer.role)
-    return OfficerProfileResponse(
-        badge_id=officer.badge_id,
-        name=officer.name,
-        role=role_str,
-        checkpoint_id=officer.checkpoint_id
-    )
+    return _profile(officer)
 
 @router.post("/logout", tags=["Authentication"])
 async def logout():

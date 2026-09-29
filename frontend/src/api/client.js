@@ -1,172 +1,109 @@
 import axios from 'axios';
 
+const TOKEN_KEY = 'CHRONICLE_AUTH_TOKEN';
+const OFFICER_KEY = 'CHRONICLE_OFFICER';
+const URL_KEY = 'CHRONICLE_BACKEND_URL';
+
 export const getBackendUrl = () => {
-  if (typeof window !== 'undefined') {
-    const custom = localStorage.getItem('AEGIS_BACKEND_URL');
-    if (custom && custom.trim()) return custom.trim().replace(/\/+$/, '');
-  }
+  const custom = localStorage.getItem(URL_KEY);
+  if (custom && custom.trim()) return custom.trim().replace(/\/+$/, '');
   return import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 };
 
 export const setBackendUrl = (url) => {
-  if (typeof window !== 'undefined') {
-    if (url && url.trim()) {
-      localStorage.setItem('AEGIS_BACKEND_URL', url.trim().replace(/\/+$/, ''));
-    } else {
-      localStorage.removeItem('AEGIS_BACKEND_URL');
-    }
-  }
+  if (url && url.trim()) localStorage.setItem(URL_KEY, url.trim().replace(/\/+$/, ''));
+  else localStorage.removeItem(URL_KEY);
 };
 
-const apiClient = axios.create({
-  baseURL: getBackendUrl(),
-  timeout: 90000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const storage = {
+  getToken: () => localStorage.getItem(TOKEN_KEY),
+  getOfficer: () => { try { return JSON.parse(localStorage.getItem(OFFICER_KEY)); } catch { return null; } },
+  set: (token, officer) => { localStorage.setItem(TOKEN_KEY, token); localStorage.setItem(OFFICER_KEY, JSON.stringify(officer)); },
+  clear: () => { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(OFFICER_KEY); },
+};
 
-// Request interceptor: attach dynamic backend URL and offline Bearer JWT token
-apiClient.interceptors.request.use((config) => {
+const api = axios.create({ baseURL: getBackendUrl(), timeout: 60000 });
+
+api.interceptors.request.use((config) => {
   config.baseURL = getBackendUrl();
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('AEGIS_AUTH_TOKEN');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
+  const token = storage.getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
 
-// Response interceptor: handle 401 unauthorized / expired tokens gracefully
-apiClient.interceptors.response.use(
-  (response) => response,
+api.interceptors.response.use(
+  (r) => r,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('AEGIS_AUTH_TOKEN');
-        localStorage.removeItem('AEGIS_OFFICER');
-        window.dispatchEvent(new CustomEvent('aegis-auth-expired', {
-          detail: { message: error.response.data?.detail || 'Session expired. Please log in again.' }
-        }));
-      }
+    if (error.response?.status === 401) {
+      storage.clear();
+      window.dispatchEvent(new CustomEvent('chronicle-auth-expired', {
+        detail: { message: error.response.data?.detail || 'Session expired. Please sign in again.' },
+      }));
     }
     return Promise.reject(error);
-  }
+  },
 );
 
-// Offline Officer Authentication Endpoints
-export const loginOfficer = async (credentials) => {
-  const response = await apiClient.post('/auth/login', credentials);
-  return response.data;
+/** Human-readable error from an axios failure. */
+export const errMsg = (err) => {
+  const d = err?.response?.data?.detail;
+  if (Array.isArray(d)) return d.map((x) => x.msg).join('; ');
+  if (d) return d;
+  if (err?.message?.includes('Network Error')) return 'Cannot reach the backend. Is it running on port 8000?';
+  return err?.message || 'Request failed';
 };
 
-export const getOfficerProfile = async () => {
-  const response = await apiClient.get('/auth/me');
-  return response.data;
+// ---- auth -------------------------------------------------------------
+export const loginOfficer = (badge_id, password) => api.post('/auth/login', { badge_id, password }).then((r) => r.data);
+export const getOfficerProfile = () => api.get('/auth/me').then((r) => r.data);
+export const checkHealth = () => api.get('/health').then((r) => r.data);
+
+// ---- cases ------------------------------------------------------------
+export const getMeta = () => api.get('/cases/meta').then((r) => r.data);
+export const getStats = () => api.get('/cases/stats').then((r) => r.data);
+export const searchAll = (q) => api.get('/cases/search', { params: { q } }).then((r) => r.data);
+export const getCases = (params = {}) => api.get('/cases', { params }).then((r) => r.data);
+export const createCase = (payload) => api.post('/cases', payload).then((r) => r.data);
+export const getCaseDossier = (caseId) => api.get(`/cases/${caseId}`).then((r) => r.data);
+export const verifyCase = (caseId) => api.get(`/cases/${caseId}/verify`).then((r) => r.data);
+export const transferCase = (caseId, target_role, note) => api.post(`/cases/${caseId}/transfer`, { target_role, note }).then((r) => r.data);
+export const setCaseStatus = (caseId, case_status, note) => api.post(`/cases/${caseId}/status`, { case_status, note }).then((r) => r.data);
+export const toggleCaseLock = (caseId) => api.post(`/cases/${caseId}/lock`).then((r) => r.data);
+
+// ---- documents --------------------------------------------------------
+export const uploadDocument = (caseId, { file, doc_type, title, description }) => {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('doc_type', doc_type);
+  fd.append('title', title);
+  if (description) fd.append('description', description);
+  return api.post(`/cases/${caseId}/documents`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data);
+};
+export const uploadNewVersion = (caseId, documentId, { file, description }) => {
+  const fd = new FormData();
+  fd.append('file', file);
+  if (description) fd.append('description', description);
+  return api.post(`/cases/${caseId}/documents/${documentId}/versions`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data);
+};
+export const getDocument = (caseId, documentId) => api.get(`/cases/${caseId}/documents/${documentId}`).then((r) => r.data);
+export const redactDocument = (caseId, documentId, payload) => api.post(`/cases/${caseId}/documents/${documentId}/redact`, payload).then((r) => r.data);
+export const issueCertificate = (caseId, documentId) => api.post(`/cases/${caseId}/documents/${documentId}/certificate`).then((r) => r.data);
+export const verifyCertificate = (caseId, certId) => api.get(`/cases/${caseId}/certificates/${certId}/verify`).then((r) => r.data);
+
+export const downloadDocument = async (caseId, documentId, redacted = false) => {
+  const r = await api.get(`/cases/${caseId}/documents/${documentId}/download`, { params: { redacted }, responseType: 'blob' });
+  const cd = r.headers['content-disposition'] || '';
+  const m = cd.match(/filename="?([^"]+)"?/);
+  const name = m ? m[1] : `${documentId}${redacted ? '_REDACTED.txt' : ''}`;
+  const url = URL.createObjectURL(r.data);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  return { filename: name, sha256: r.headers['x-document-sha256'] };
 };
 
-export const logoutOfficer = async () => {
-  try {
-    const response = await apiClient.post('/auth/logout');
-    return response.data;
-  } catch (e) {
-    // Offline / stateless JWT: safe fallback
-    return { status: 'SUCCESS', message: 'Logged out' };
-  }
-};
+// ---- audit ------------------------------------------------------------
+export const getAudit = (params = {}) => api.get('/audit', { params }).then((r) => r.data);
+export const getAuditSummary = () => api.get('/audit/summary').then((r) => r.data);
 
-export const checkHealth = async () => {
-  const response = await apiClient.get('/health');
-  return response.data;
-};
-
-export const runFullInspection = async (payload) => {
-  const response = await apiClient.post('/scan/inspect-full', payload);
-  return response.data;
-};
-
-export const preprocessImage = async (payload) => {
-  const response = await apiClient.post('/preprocess/quality-and-rectify', payload);
-  return response.data;
-};
-
-export const runForensics = async (payload) => {
-  const response = await apiClient.post('/forensics/analyze-all', payload);
-  return response.data;
-};
-
-export const verifyMRZ = async (payload) => {
-  const response = await apiClient.post('/mrz/verify-mrz', payload);
-  return response.data;
-};
-
-export const compareFaces = async (payload) => {
-  const response = await apiClient.post('/biometrics/compare-faces', payload);
-  return response.data;
-};
-
-export const checkPassiveLiveness = async (payload) => {
-  const response = await apiClient.post('/biometrics/liveness/passive', payload);
-  return response.data;
-};
-
-export const verifyActiveChallenge = async (payload) => {
-  const response = await apiClient.post('/biometrics/liveness/active-challenge', payload);
-  return response.data;
-};
-
-export const getWatchlist = async () => {
-  const response = await apiClient.get('/blacklist/watchlist');
-  return response.data;
-};
-
-export const addToWatchlist = async (payload) => {
-  const response = await apiClient.post('/blacklist/watchlist/add', payload);
-  return response.data;
-};
-
-export const removeFromWatchlist = async (documentNumber) => {
-  const response = await apiClient.delete(`/blacklist/watchlist/${documentNumber}`);
-  return response.data;
-};
-
-export const getCheckpointAnalytics = async () => {
-  const response = await apiClient.get('/analytics/checkpoint/metrics');
-  return response.data;
-};
-
-export const getBlockchainLedger = async () => {
-  const response = await apiClient.get('/blockchain/ledger/blocks');
-  return response.data;
-};
-
-export const generateCertificate = async (payload) => {
-  const response = await apiClient.post('/blockchain/certificate/generate', payload);
-  return response.data;
-};
-
-export const askCopilot = async (payload) => {
-  const response = await apiClient.post('/scan/copilot-chat', payload);
-  return response.data;
-};
-
-export const getLlmStatus = async () => {
-  const response = await apiClient.get('/scan/llm-status');
-  return response.data;
-};
-
-export const submitHITLOverride = async (payload) => {
-  const response = await apiClient.post('/scan/hitl-override', payload);
-  return response.data;
-};
-
-export const getReviewQueue = async () => {
-  const response = await apiClient.get('/scan/review-queue');
-  return response.data;
-};
-
-export default apiClient;
-
+export default api;

@@ -53,8 +53,8 @@ def compute_error_level_analysis(
     suspicious_pixels = np.sum(ela_gray > max(tamper_threshold, 160))
     tamper_ratio = float(suspicious_pixels / (ela_gray.size + 1e-6))
     
-    # Calibrated thresholds for real-world passport scans:
-    # Real JPEG-scanned passports often have mean_delta 30-90 due to re-compression artifacts.
+    # Calibrated thresholds for real-world document scans:
+    # Re-compressed scans often have mean_delta 30-90 from ordinary JPEG artifacts.
     # Genuine digital tampering typically shows mean_delta > 100 AND localized high-ratio patches.
     is_tampered_medium = tamper_ratio > 0.09 or mean_delta > 95.0
     is_tampered_high = tamper_ratio > 0.18 or mean_delta > 130.0

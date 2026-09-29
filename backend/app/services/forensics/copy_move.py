@@ -8,17 +8,13 @@ def detect_copy_move_forgery(
     min_inliers: int = 6
 ) -> Tuple[np.ndarray, Dict[str, Any]]:
     """
-    Detects duplicated / cloned image regions (e.g. copied stamps, cloned digits, cloned seals)
+    Detects duplicated / cloned regions in scanned documents and evidence photos (copied stamps, cloned signatures, duplicated digits)
     using ORB keypoint descriptors, spatial distance thresholding, and RANSAC affine verification.
     """
     gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY) if len(image_bgr.shape) == 3 else image_bgr
     h, w = gray.shape[:2]
-    # Create mask excluding bottom 22% (MRZ band) to prevent repeated chevrons '<' and standard numbers from false triggers
-    mask = np.ones((h, w), dtype=np.uint8) * 255
-    mask[int(h * 0.78):, :] = 0
-
     orb = cv2.ORB_create(nfeatures=1200)
-    keypoints, descriptors = orb.detectAndCompute(gray, mask)
+    keypoints, descriptors = orb.detectAndCompute(gray, None)
 
     annotated = image_bgr.copy()
     cloned_pairs = []

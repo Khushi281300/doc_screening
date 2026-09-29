@@ -1,20 +1,22 @@
 from fastapi import APIRouter
 import time
+from ....core.config import settings
 
 router = APIRouter()
+
 
 @router.get("/health", tags=["System"])
 async def get_health_status():
     return {
         "status": "ONLINE",
-        "system": "AI-Based Fake Identity & Document Screening Grid",
-        "version": "1.0.0",
+        "system": settings.PROJECT_NAME,
+        "version": settings.VERSION,
         "timestamp": time.time(),
         "services": {
-            "forensics_engine": "ACTIVE",
-            "mrz_validator": "ACTIVE",
-            "biometric_matcher": "ACTIVE",
-            "risk_engine": "ACTIVE",
-            "blockchain_ledger": "ACTIVE"
-        }
+            "encrypted_vault": "ACTIVE",
+            "custody_chain": "ACTIVE",
+            "forensic_screening": "ACTIVE",
+            "bsa_certificates": "ACTIVE",
+            "redaction_engine": "ACTIVE",
+        },
     }

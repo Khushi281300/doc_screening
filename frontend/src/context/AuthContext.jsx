@@ -1,158 +1,72 @@
-﻿import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { loginOfficer, getOfficerProfile, logoutOfficer } from '../api/client';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { loginOfficer, getOfficerProfile, storage, errMsg } from '../api/client';
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
-  const [officer, setOfficer] = useState(() => {
-    try {
-      const saved = localStorage.getItem('AEGIS_OFFICER');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [token, setToken] = useState(() => {
-    return localStorage.getItem('AEGIS_AUTH_TOKEN') || null;
-  });
+export { roleInfo } from '../labels';
+
+export function AuthProvider({ children }) {
+  const [officer, setOfficer] = useState(() => storage.getOfficer());
+  const [token, setToken] = useState(() => storage.getToken());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const logout = useCallback(async () => {
-    try {
-      await logoutOfficer();
-    } catch (e) {
-      console.warn('Stateless logout completed locally');
-    } finally {
-      localStorage.removeItem('AEGIS_AUTH_TOKEN');
-      localStorage.removeItem('AEGIS_OFFICER');
-      setToken(null);
-      setOfficer(null);
-      setError(null);
-    }
+  const logout = useCallback(() => {
+    storage.clear();
+    setToken(null);
+    setOfficer(null);
+    setError(null);
   }, []);
 
-  // Validate token freshness on initial load
   useEffect(() => {
-    let isMounted = true;
-    const validateExistingSession = async () => {
-      const storedToken = localStorage.getItem('AEGIS_AUTH_TOKEN');
-      if (!storedToken) {
-        if (isMounted) setLoading(false);
-        return;
-      }
-
+    let alive = true;
+    (async () => {
+      if (!storage.getToken()) { setLoading(false); return; }
       try {
         const profile = await getOfficerProfile();
-        if (isMounted) {
-          setOfficer(profile);
-          localStorage.setItem('AEGIS_OFFICER', JSON.stringify(profile));
-        }
-      } catch (err) {
-        console.warn('Stored session invalid or expired, clearing authentication state', err);
-        if (isMounted) {
-          localStorage.removeItem('AEGIS_AUTH_TOKEN');
-          localStorage.removeItem('AEGIS_OFFICER');
-          setToken(null);
-          setOfficer(null);
-        }
+        if (alive) { setOfficer(profile); storage.set(storage.getToken(), profile); }
+      } catch {
+        if (alive) { storage.clear(); setToken(null); setOfficer(null); }
       } finally {
-        if (isMounted) setLoading(false);
+        if (alive) setLoading(false);
       }
-    };
-
-    validateExistingSession();
-
-    // Listen for automatic 401 expiration events dispatched by axios interceptor
-    const handleAuthExpired = (e) => {
-      setToken(null);
-      setOfficer(null);
-      setError(e.detail?.message || 'Session expired. Please log in again.');
-    };
-
-    window.addEventListener('aegis-auth-expired', handleAuthExpired);
-    return () => {
-      isMounted = false;
-      window.removeEventListener('aegis-auth-expired', handleAuthExpired);
-    };
+    })();
+    const onExpired = (e) => { setToken(null); setOfficer(null); setError(e.detail?.message); };
+    window.addEventListener('chronicle-auth-expired', onExpired);
+    return () => { alive = false; window.removeEventListener('chronicle-auth-expired', onExpired); };
   }, []);
 
   const login = async (badgeId, password) => {
     setError(null);
-    let normalizedBadge = (badgeId || '').trim().toUpperCase();
-    if (!normalizedBadge || normalizedBadge === 'OFFICER' || normalizedBadge === 'INSPECTOR' || normalizedBadge === 'DEMO') {
-      normalizedBadge = 'BC-1001';
-    } else if (normalizedBadge === 'ADMIN' || normalizedBadge === 'MANAGER' || normalizedBadge === 'SUPERVISOR') {
-      normalizedBadge = 'ADM-001';
-    }
-
     try {
-      const data = await loginOfficer({
-        badge_id: normalizedBadge,
-        password: password
-      });
-
-      const authToken = data.access_token;
-      const officerData = data.officer;
-
-      localStorage.setItem('AEGIS_AUTH_TOKEN', authToken);
-      localStorage.setItem('AEGIS_OFFICER', JSON.stringify(officerData));
-
-      setToken(authToken);
-      setOfficer(officerData);
-      return { success: true, officer: officerData };
+      const data = await loginOfficer(badgeId.trim().toUpperCase(), password);
+      storage.set(data.access_token, data.officer);
+      setToken(data.access_token);
+      setOfficer(data.officer);
+      return data.officer;
     } catch (err) {
-      // If network error / backend offline, allow seamless offline demo session
-      if (!err.response || err.message?.includes('Network Error')) {
-        const isAdm = normalizedBadge.includes('ADM') || normalizedBadge.includes('ADMIN');
-        const fallbackOfficer = {
-          badge_id: normalizedBadge,
-          name: isAdm ? 'Administrator' : 'Officer',
-          role: isAdm ? 'ADMIN' : 'OFFICER',
-          checkpoint_id: 'Gate 4'
-        };
-        const fakeToken = 'offline-token-' + Date.now();
-        localStorage.setItem('AEGIS_AUTH_TOKEN', fakeToken);
-        localStorage.setItem('AEGIS_OFFICER', JSON.stringify(fallbackOfficer));
-        setToken(fakeToken);
-        setOfficer(fallbackOfficer);
-        return { success: true, officer: fallbackOfficer };
-      }
-      const msg = err.response?.data?.detail || 'Invalid username or password';
+      const msg = errMsg(err);
       setError(msg);
       throw new Error(msg);
     }
   };
 
-  const isAuthenticated = Boolean(token && officer);
-  const isAdmin = Boolean(officer && officer.role === 'ADMIN');
-
-  return (
-    <AuthContext.Provider
-      value={{
-        officer,
-        token,
-        isAuthenticated,
-        isAdmin,
-        loading,
-        error,
-        setError,
-        login,
-        logout
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  const role = officer?.role;
+  const value = {
+    officer, token, loading, error, setError, login, logout,
+    role,
+    isAuthenticated: Boolean(token && officer),
+    isPolice: role === 'INVESTIGATING_OFFICER' || role === 'STATION_HOUSE_OFFICER',
+    isSHO: role === 'STATION_HOUSE_OFFICER',
+    isIO: role === 'INVESTIGATING_OFFICER',
+    isFSL: role === 'FSL_EXAMINER',
+    isCourt: role === 'MAGISTRATE',
+  };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 };
-
-export default AuthContext;
-
