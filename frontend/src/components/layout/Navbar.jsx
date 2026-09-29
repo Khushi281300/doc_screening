@@ -123,8 +123,8 @@ export default function Navbar({ online, activeTab, onRecheck }) {
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => {
-                setUrl('http://localhost:8000/api/v1');
-                setBackendUrl(null);
+                setUrl('https://doc-screening-49yy.onrender.com/api/v1');
+                setBackendUrl('https://doc-screening-49yy.onrender.com/api/v1');
                 setTest(null);
               }}
             >

@@ -6,8 +6,17 @@ const URL_KEY = 'CHRONICLE_BACKEND_URL';
 
 export const getBackendUrl = () => {
   const custom = localStorage.getItem(URL_KEY);
-  if (custom && custom.trim()) return custom.trim().replace(/\/+$/, '');
-  return import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+  if (custom && custom.trim()) {
+    const trimmed = custom.trim().replace(/\/+$/, '');
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      if (trimmed.includes('localhost') || trimmed.includes('127.0.0.1')) {
+        localStorage.removeItem(URL_KEY);
+        return import.meta.env.VITE_API_URL || 'https://doc-screening-49yy.onrender.com/api/v1';
+      }
+    }
+    return trimmed;
+  }
+  return import.meta.env.VITE_API_URL || 'https://doc-screening-49yy.onrender.com/api/v1';
 };
 
 export const setBackendUrl = (url) => {
@@ -49,7 +58,9 @@ export const errMsg = (err) => {
   const d = err?.response?.data?.detail;
   if (Array.isArray(d)) return d.map((x) => x.msg).join('; ');
   if (d) return d;
-  if (err?.message?.includes('Network Error')) return 'Cannot reach the backend. Is it running on port 8000?';
+  if (err?.message?.includes('Network Error')) {
+    return `Cannot reach the backend at ${getBackendUrl()}. Please verify the server is running and accessible.`;
+  }
   return err?.message || 'Request failed';
 };
 

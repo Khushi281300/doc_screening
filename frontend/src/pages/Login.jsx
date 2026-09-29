@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck, Eye, EyeOff, ArrowRight, Lock, History, FileCheck,
-  UserCheck, FlaskConical, Scale, Gavel, Cpu, KeyRound, CheckCircle2
+  UserCheck, FlaskConical, Scale, Gavel, Cpu, KeyRound, CheckCircle2,
+  Server, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Spinner, Alert, Field, ThemeToggle } from '../components/ui';
+import { Spinner, Alert, Field, ThemeToggle, Modal } from '../components/ui';
+import { getBackendUrl, setBackendUrl } from '../api/client';
 
 const DEMO_ACCOUNTS = [
   {
@@ -57,6 +59,36 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState('');
 
+  const [serverModalOpen, setServerModalOpen] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState(getBackendUrl());
+  const [serverStatus, setServerStatus] = useState('checking');
+  const [testResult, setTestResult] = useState(null);
+
+  const testConnection = async (targetUrl = currentUrl) => {
+    setTestResult({ kind: 'info', msg: 'Pinging API gateway…' });
+    try {
+      const trimmed = (targetUrl || '').trim().replace(/\/+$/, '');
+      const res = await fetch(`${trimmed}/health`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setTestResult({ kind: 'success', msg: `Connected: ${data.system || 'CHRONICLE'} (v${data.version || '3.0.0'})` });
+      setServerStatus('online');
+    } catch (e) {
+      setTestResult({ kind: 'danger', msg: `Cannot connect to ${targetUrl}: ${e.message}` });
+      setServerStatus('offline');
+    }
+  };
+
+  useEffect(() => {
+    testConnection(getBackendUrl());
+  }, []);
+
+  const saveUrl = async () => {
+    const trimmed = (currentUrl || '').trim().replace(/\/+$/, '');
+    setBackendUrl(trimmed);
+    await testConnection(trimmed);
+  };
+
   const submit = async (b = badge, p = password) => {
     if (!b.trim() || !p) {
       setLocalError('Please enter your badge ID and authentication password.');
@@ -98,11 +130,28 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-xs font-semibold text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-glow" />
-              <span>Zero-Trust Blockchain Grid</span>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => { setServerModalOpen(true); setTestResult(null); }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold transition ${
+                serverStatus === 'online'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                  : serverStatus === 'offline'
+                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
+                  : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted/50'
+              }`}
+              title="Click to view or edit backend server URL"
+            >
+              <Server size={12} />
+              <span className="hidden sm:inline">Backend:</span>
+              <span className="font-mono text-[11px] truncate max-w-[130px]">
+                {currentUrl.replace('https://', '').replace('http://', '').replace('/api/v1', '')}
+              </span>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                serverStatus === 'online' ? 'bg-emerald-400 pulse-glow' : serverStatus === 'offline' ? 'bg-rose-400' : 'bg-amber-400'
+              }`} />
+            </button>
             <ThemeToggle />
           </div>
         </header>
@@ -268,9 +317,51 @@ export default function Login() {
       </main>
 
       {/* Login Footer */}
-      <footer className="border-t border-border px-6 py-3 bg-card/40 text-center text-xs text-muted-foreground">
-        <span>Smart India Hackathon 2026 · Problem Statement 26190 · Ministry of Home Affairs / NCRB</span>
-      </footer>
+      {/* Server API Gateway Modal */}
+      <Modal
+        open={serverModalOpen}
+        onClose={() => setServerModalOpen(false)}
+        title="Server API Connection"
+        icon={Server}
+        subtitle="Gateway address for CHRONICLE backend API services."
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => {
+                const liveUrl = 'https://doc-screening-49yy.onrender.com/api/v1';
+                setCurrentUrl(liveUrl);
+                setBackendUrl(liveUrl);
+                testConnection(liveUrl);
+              }}
+            >
+              Reset to Cloud (Render)
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={saveUrl}
+            >
+              {testResult?.kind === 'info' ? <Spinner size={13} /> : <RefreshCw size={13} />} Test & Save Connection
+            </button>
+          </>
+        }
+      >
+        <Field label="Backend Gateway URL" hint="Format: https://host:port/api/v1">
+          <input
+            className="input mono text-sm"
+            value={currentUrl}
+            onChange={(e) => setCurrentUrl(e.target.value)}
+            placeholder="https://doc-screening-49yy.onrender.com/api/v1"
+          />
+        </Field>
+        {testResult && (
+          <Alert kind={testResult.kind} className="mt-3.5">
+            {testResult.msg}
+          </Alert>
+        )}
+      </Modal>
     </div>
   );
 }
